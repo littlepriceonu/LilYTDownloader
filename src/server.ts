@@ -11,7 +11,9 @@ const SocketHandlers = {
         console.log(`[CLIENT] ${msg}`)
     },
     "DOWNLOAD_VIDEO": function(vid: string, ..._: string[]) {
-        ytdl(`http://youtube.com/watch?v=${vid}`).pipe(fs.createWriteStream('video.mp4'))
+        ytdl(`http://youtube.com/watch?v=${vid}`).pipe(fs.createWriteStream('video.mp4')).on('finish', ()=>{
+            console.log("Download Complete!")
+        })
     },
 }
 
