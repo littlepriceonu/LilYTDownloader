@@ -1,6 +1,17 @@
 import ytdl from 'ytdl-core';
 import * as fs from 'fs';
 import * as ws from 'ws';
+// TODO
+// Install entire playlists to a folder
+// Set up a UI for the userscript
+// 
+// Userscript:
+//  Folder Select
+//  Name of file
+//  Quality Select
+//
+// Server:
+//  Quality Support
 const PORT = 5020;
 const YTSocket = new ws.WebSocketServer({ port: PORT });
 const SocketHandlers = {
@@ -8,7 +19,11 @@ const SocketHandlers = {
         console.log(`[CLIENT] ${msg}`);
     },
     "DOWNLOAD_VIDEO": function (vid, ..._) {
-        ytdl(`http://youtube.com/watch?v=${vid}`).pipe(fs.createWriteStream('video.mp4'));
+        if (!ytdl.validateID(vid))
+            return;
+        ytdl(`http://youtube.com/watch?v=${vid}`).pipe(fs.createWriteStream('video.mp4')).on('finish', () => {
+            console.log("Download Complete!");
+        });
     },
 };
 YTSocket.on('connection', function (con) {

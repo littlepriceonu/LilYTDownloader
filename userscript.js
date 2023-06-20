@@ -1,20 +1,21 @@
 // ==UserScript==
 // @name         LYT UserScript
 // @namespace    http://tampermonkey.net/
-// @version      1
+// @version      0.1
 // @description  Button That Downloads A Youtube Video
 // @author       Littlepriceonu#0001
 // @match        *://*.youtube.com/watch?v=*
 // @icon         https://www.google.com/s2/favicons?domain=youtube.com
 // @homepage     https://github.com/littlepriceonu/LilYTDownloader
 // @grant        none
+
 // ==/UserScript==
 (function() {
     'use strict';
     console.log("[LYT] Init...")
     console.log("[LYT] Made By: Littlepriceonu#0001")
 
-    var LYT = new WebSocket("ws://localhost:5020")
+    var LYT;
 
     //#region Functions
 
@@ -69,7 +70,17 @@
         });
     }
 
+    function StartConnection() {
+        LYT = new WebSocket("ws://localhost:5020")
+
+        LYT.onclose = ()=>{
+            StartConnection()
+        }
+    }
+
     //#endregion
+
+    StartConnection()
 
     WaitForElement("div#owner").then((el)=>{
         console.log("Owner Text Found!")
