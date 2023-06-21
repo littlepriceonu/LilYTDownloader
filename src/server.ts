@@ -15,7 +15,7 @@ import {randomUUID} from 'crypto';
 // Server:
 //  Quality Support
 
-var Connections: {} = {}
+var Connections: {[id: string]: ws} = {}
 
 const PORT = 5020
 
@@ -34,8 +34,11 @@ const SocketHandlers = {
 }
 
 YTSocket.on('connection', function (con) {
-    
+
     console.log("Client Connection Started...")
+
+    // make it so the ID has a common placement in the string sent so it would be like
+    // SOME_ID|User's Id|Data goes here|more data here| even more here
 
     con.on("message", (msg: ws.RawData | string) => {
         msg = msg.toString()
@@ -49,6 +52,13 @@ YTSocket.on('connection', function (con) {
             SocketHandlers[msgID](msgData)
         }
     })
+
+    var id = randomUUID()
+
+    Connections[id] = con
+
+    con.send(`CLIENT_ID|${id}`)
+
 })
 
 console.log(`[LYT] Listening on port ${PORT}`)
