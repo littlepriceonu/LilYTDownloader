@@ -83,9 +83,9 @@
     StartConnection()
 
     WaitForElement("div#owner").then((el)=>{
-        console.log("Owner Text Found!")
+        console.log("[LYT] Owner Text Found!")
         WaitForElement("div#subscribe-button").then(() => {
-            console.log("[LYT] Subscribe Button Found... Creating Button")
+            console.log("[LYT] Subscribe Button Found! Creating Button...")
             var SaveButton = document.createElement("input");
 
             SaveButton.id = "LYTSaveButton"
@@ -119,11 +119,9 @@
             }
             `)
 
-            // old one: "https://www.yout.com/watch?v="
-
             SaveButton.onclick = () => {
                 if (LYT.readyState == LYT.OPEN) {
-                   LYT.send(`DOWNLOAD_VIDEO|${document.URL.split("?v=")[1]}`)
+                   LYT.send(`DOWNLOAD_VIDEO|${document.URL.split("?v=")[1]}|test.mp4`)
                 }
             }
 
@@ -135,7 +133,7 @@
 
             const observer = new MutationObserver(mutations => {
                 if (!document.querySelector(selector)) {
-                    console.log("Youtube Removed! adding back...")
+                    console.log("[LYT] Youtube Removed Save Button! Adding Back...")
                     el.append(SaveButton)
                 }
             });
@@ -144,6 +142,6 @@
                 childList: true,
                 subtree: true
             });
-            })
+        })
     })
 })();

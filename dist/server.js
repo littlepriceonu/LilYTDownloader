@@ -12,16 +12,17 @@ import * as ws from 'ws';
 //
 // Server:
 //  Quality Support
+var Connections = {};
 const PORT = 5020;
 const YTSocket = new ws.WebSocketServer({ port: PORT });
 const SocketHandlers = {
     "DEBUG": function (msg, ..._) {
         console.log(`[CLIENT] ${msg}`);
     },
-    "DOWNLOAD_VIDEO": function (vid, ..._) {
+    "DOWNLOAD_VIDEO": function (vid, fileName, ..._) {
         if (!ytdl.validateID(vid))
             return;
-        ytdl(`http://youtube.com/watch?v=${vid}`).pipe(fs.createWriteStream('video.mp4')).on('finish', () => {
+        ytdl(`http://youtube.com/watch?v=${vid}`).pipe(fs.createWriteStream(fileName)).on('finish', () => {
             console.log("Download Complete!");
         });
     },
