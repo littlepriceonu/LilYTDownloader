@@ -3,19 +3,18 @@
 // @namespace    http://tampermonkey.net/
 // @version      0.1
 // @description  Required UserScript for the LYT Server
-// @author       Littlepriceonu#0001
+// @author       Littlepriceonu
 // @match        *://*.youtube.com/watch?v=*
 // @icon         https://www.google.com/s2/favicons?domain=youtube.com
 // @homepage     https://github.com/littlepriceonu/LilYTDownloader
 // @grant        none
 
 // ==/UserScript==
+
 (function() {
     'use strict';
     console.log("[LYT] Init...")
-    console.log("[LYT] Made By: Littlepriceonu#0001")
-
-    var ReconnectInterval = 0;
+    console.log("[LYT] Made By: Littlepriceonu")
 
     var LYT;
 
@@ -29,6 +28,12 @@
             console.log("[LYT] Download Finished!")
         },
     }
+
+    const SaveButton = document.createElement("input");
+
+    SaveButton.id = "LYTSaveButton"
+    SaveButton.type = "button";
+    SaveButton.value = "CONNECTING..."
 
     //#region Functions
 
@@ -87,14 +92,18 @@
         LYT = new WebSocket("ws://localhost:5020")
 
         LYT.onopen = ()=>{
+            SaveButton.value = "SAVE"
+
             console.log("[START_CONNECTION] WebSocket Opened!")
         }
 
         LYT.onmessage = HandleServerMessage
-    
-        LYT.onerror = StartConnection
 
-        LYT.onclose = StartConnection
+        LYT.onclose = ()=>{
+            console.log("[LYT] Socket Connection Closed!")
+            SaveButton.value = "CONNECTING..."
+            StartConnection()
+        } 
     }
 
     function HandleServerMessage(msg) {
@@ -112,12 +121,7 @@
     WaitForElement("div#owner").then((el)=>{
         console.log("[LYT] Owner Text Found!")
         WaitForElement("div#subscribe-button").then(() => {
-            console.log("[LYT] Subscribe Button Found! Creating Button...")
-            var SaveButton = document.createElement("input");
-
-            SaveButton.id = "LYTSaveButton"
-            SaveButton.type = "button";
-            SaveButton.value = "SAVE"
+            console.log("[LYT] Subscribe Button Found!")
 
             injectCSS(`
             input#LYTSaveButton {
@@ -138,14 +142,13 @@
 
             SaveButton.onclick = () => {
                 if (LYT.readyState == LYT.OPEN) {
-                   LYT.send(`DOWNLOAD_VIDEO|${CLIENT_ID}|${document.URL.split("?v=")[1]}|test.mp4`)
+                   LYT.send(`DOWNLOAD_VIDEO|${CLIENT_ID}|${document.URL.split("?v=")[1]}|downloads/test.mp4`)
                    console.log(`[LYT] Downloading Video (${document.URL.split("?v=")[1]})...`)
                 }
             }
 
-            console.log("[LYT] Loaded!")
-
             el.append(SaveButton)
+            console.log("[LYT] Save Button Applied To DOM!")
 
             var selector = `div#${el.id} > input`
 
@@ -160,6 +163,8 @@
                 childList: true,
                 subtree: true
             });
+
+            console.log("[LYT] Loaded!")
         })
     })
 })();

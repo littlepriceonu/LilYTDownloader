@@ -1,11 +1,16 @@
 import ytdl from 'ytdl-core';
+import path from 'path';
 import * as fs from 'fs';
 import * as ws from 'ws';
 import { randomUUID } from 'crypto';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 // TODO
 // Install entire playlists to a folder
 // Choose between mp4 and mp3
 // Set up a UI for the userscript
+// set up heartbeats on the server & client so I can kill dead client connections
 // 
 // Userscript:
 //  Folder Select 
@@ -14,10 +19,18 @@ import { randomUUID } from 'crypto';
 //
 // Server:
 //  Quality Support
-//  Check if file exists
+//  Check if file exists, send message to client warning about overwrite
 var Connections = {};
 const PORT = 5020;
 const YTSocket = new ws.WebSocketServer({ port: PORT });
+//#region Functions
+function removeLastDirFromString(dir, separator) {
+    dir = dir.split(separator);
+    dir.pop();
+    dir = dir.join("/");
+    return dir;
+}
+//#endregion
 const SocketHandlers = {
     "DEBUG": function (msg, ..._) {
         console.log(`[CLIENT] ${msg}`);
@@ -27,8 +40,13 @@ const SocketHandlers = {
             console.log(`[YTDL_CORE] Video ID ${vid} is invalid`);
             return;
         }
-        console.log(`[YTDL_CORE] Video ID valid, installing video to ./downloads/${fileName}...`);
-        ytdl(`http://youtube.com/watch?v=${vid}`).pipe(fs.createWriteStream(`./downloads/${fileName}`)).on('finish', () => {
+        var dir = removeLastDirFromString(fileName, "/");
+        var __dir = removeLastDirFromString(__dirname, "\\");
+        console.log(`[YTDL_CORE] Video ID valid, installing video to ${__dir}/${fileName}...`);
+        if (!fs.existsSync(__dir + "/" + dir)) {
+            fs.mkdirSync(__dir + "/" + dir, { recursive: true });
+        }
+        ytdl(`http://youtube.com/watch?v=${vid}`).pipe(fs.createWriteStream(`${__dir}/${fileName}`)).on('finish', () => {
             console.log("[YTDL_CORE] Download Complete!");
             Connections[userID].send("DOWNLOAD_COMPLETE|");
         }).on("error", (err) => {
