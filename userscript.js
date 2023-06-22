@@ -2,7 +2,7 @@
 // @name         LYT UserScript
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  Button That Downloads A Youtube Video
+// @description  Required UserScript for the LYT Server
 // @author       Littlepriceonu#0001
 // @match        *://*.youtube.com/watch?v=*
 // @icon         https://www.google.com/s2/favicons?domain=youtube.com
@@ -15,7 +15,20 @@
     console.log("[LYT] Init...")
     console.log("[LYT] Made By: Littlepriceonu#0001")
 
+    var ReconnectInterval = 0;
+
     var LYT;
+
+    var CLIENT_ID = ""
+
+    const ServerHandlers = {
+        "CLIENT_ID": function(id, ..._) {
+            CLIENT_ID = id
+        },
+        "DOWNLOAD_COMPLETE": function(..._) {
+            console.log("[LYT] Download Finished!")
+        },
+    }
 
     //#region Functions
 
@@ -73,10 +86,24 @@
     function StartConnection() {
         LYT = new WebSocket("ws://localhost:5020")
 
-        LYT.onclose = ()=>{
-            StartConnection()
+        LYT.onopen = ()=>{
+            console.log("[START_CONNECTION] WebSocket Opened!")
         }
+
+        LYT.onmessage = HandleServerMessage
+    
+        LYT.onerror = StartConnection
+
+        LYT.onclose = StartConnection
     }
+
+    function HandleServerMessage(msg) {
+        const _Split = msg.data.split("|")
+        const ID = _Split.shift()
+        const Data = _Split
+    
+        if (ServerHandlers[ID]) ServerHandlers[ID](...Data)
+    }    
 
     //#endregion
 
@@ -91,16 +118,6 @@
             SaveButton.id = "LYTSaveButton"
             SaveButton.type = "button";
             SaveButton.value = "SAVE"
-
-            // SaveButton.style.cursor = "pointer"
-            // SaveButton.style.color = "#fff"
-            // SaveButton.style.border = "none"
-            // SaveButton.style.padding = "0px"
-            // SaveButton.style.paddingTop = "6px"
-            // SaveButton.style.fontWeight = "550"
-            // SaveButton.style.paddingBottom = "4px"
-            // SaveButton.style.paddingLeft = "4px"
-            // SaveButton.style.background = "none"
 
             injectCSS(`
             input#LYTSaveButton {
@@ -121,7 +138,8 @@
 
             SaveButton.onclick = () => {
                 if (LYT.readyState == LYT.OPEN) {
-                   LYT.send(`DOWNLOAD_VIDEO|${document.URL.split("?v=")[1]}|test.mp4`)
+                   LYT.send(`DOWNLOAD_VIDEO|${CLIENT_ID}|${document.URL.split("?v=")[1]}|test.mp4`)
+                   console.log(`[LYT] Downloading Video (${document.URL.split("?v=")[1]})...`)
                 }
             }
 

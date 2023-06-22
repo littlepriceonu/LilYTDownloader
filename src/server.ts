@@ -5,15 +5,17 @@ import {randomUUID} from 'crypto';
 
 // TODO
 // Install entire playlists to a folder
+// Choose between mp4 and mp3
 // Set up a UI for the userscript
 // 
 // Userscript:
-//  Folder Select
+//  Folder Select 
 //  Name of file
 //  Quality Select
 //
 // Server:
 //  Quality Support
+//  Check if file exists
 
 var Connections: {[id: string]: ws} = {}
 
@@ -25,20 +27,27 @@ const SocketHandlers = {
     "DEBUG": function(msg: string, ..._: string[]) {
         console.log(`[CLIENT] ${msg}`)
     },
-    "DOWNLOAD_VIDEO": function(vid: string, fileName: string, ..._: string[]) {
-        if (!ytdl.validateID(vid)) return;
-        ytdl(`http://youtube.com/watch?v=${vid}`).pipe(fs.createWriteStream(fileName)).on('finish', ()=>{
-            console.log("Download Complete!")
+    "DOWNLOAD_VIDEO": function(userID: string, vid: string, fileName: string, ..._: string[]) {
+        if (!ytdl.validateID(vid)) {console.log(`[YTDL_CORE] Video ID ${vid} is invalid`); return;}
+
+        console.log(`[YTDL_CORE] Video ID valid, installing video to ./downloads/${fileName}...`)
+
+        ytdl(`http://youtube.com/watch?v=${vid}`).pipe(fs.createWriteStream(`./downloads/${fileName}`)).on('finish', ()=>{
+            console.log("[YTDL_CORE] Download Complete!")
+            Connections[userID].send("DOWNLOAD_COMPLETE|")
+        }).on("error", (err) => {
+            console.log(`[YTDL_CORE] Error while downloading! Name: ${err.name} | Message: ${err.message}`)
+            Connections[userID].send(`DOWNLOAD_ERROR|${err.name}`)
         })
     },
 }
 
 YTSocket.on('connection', function (con) {
 
-    console.log("Client Connection Started...")
+    console.log("[ON_CONNECTION] Client Connection Started...")
 
     // make it so the ID has a common placement in the string sent so it would be like
-    // SOME_ID|User's Id|Data goes here|more data here| even more here
+    // SOME_ID|User's Id|Data goes here|more data here|even more here
 
     con.on("message", (msg: ws.RawData | string) => {
         msg = msg.toString()
@@ -46,10 +55,15 @@ YTSocket.on('connection', function (con) {
         const _Split = msg.split("|")
         // remove the first item in the array and make it msgID
         const msgID = _Split.shift()
+        const userID = _Split.shift()
         const msgData = _Split
 
+        const fullData = [userID, ...msgData]
+
+        if (!Connections[userID]) {con.send("ID_INCORRECT|"); return;}
+
         if (SocketHandlers[msgID]) {
-            SocketHandlers[msgID](msgData)
+            SocketHandlers[msgID](...fullData)
         }
     })
 
