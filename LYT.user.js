@@ -27,6 +27,9 @@
         "DOWNLOAD_COMPLETE": function(..._) {
             console.log("[LYT] Download Finished!")
         },
+        "DOWNLOAD_ERROR": function(err, ..._) {
+            console.log(`[LYT] Download Error! ${err}`)
+        },
     }
 
     const SaveButton = document.createElement("input");

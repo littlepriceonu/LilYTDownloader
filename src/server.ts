@@ -48,21 +48,23 @@ const SocketHandlers = {
     "DOWNLOAD_VIDEO": function(userID: string, vid: string, fileName: string, ..._: string[]) {
         if (!ytdl.validateID(vid)) {console.log(`[YTDL_CORE] Video ID ${vid} is invalid`); return;}
 
-        var dir = removeLastDirFromString(fileName, "/")
+        
         var __dir = removeLastDirFromString(__dirname, "\\")
+        var fullDir = __dir + "/" + fileName
+        var parentDir = __dir + "/" + removeLastDirFromString(fileName, "/")
 
-        console.log(`[YTDL_CORE] Video ID valid, installing video to ${__dir}/${fileName}...`)
+        console.log(`[YTDL_CORE] Video ID valid, installing video to ${fullDir}...`)
 
-        if (!fs.existsSync(__dir+"/"+dir)) {
-            fs.mkdirSync(__dir+"/"+dir, { recursive: true });
+        if (!fs.existsSync(parentDir)) {
+            fs.mkdirSync(parentDir, { recursive: true });
         }
 
-        ytdl(`http://youtube.com/watch?v=${vid}`).pipe(fs.createWriteStream(`${__dir}/${fileName}`)).on('finish', ()=>{
+        ytdl(`http://youtube.com/watch?v=${vid}`).pipe(fs.createWriteStream(`${fullDir}`)).on('finish', ()=>{
             console.log("[YTDL_CORE] Download Complete!")
             Connections[userID].send("DOWNLOAD_COMPLETE|")
         }).on("error", (err) => {
             console.log(`[YTDL_CORE] Error while downloading! Name: ${err.name} | Message: ${err.message}`)
-            Connections[userID].send(`DOWNLOAD_ERROR|${err.name}`)
+            Connections[userID].send(`DOWNLOAD_ERROR|${err.message}`)
         })
     },
 }
