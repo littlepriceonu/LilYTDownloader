@@ -38,15 +38,22 @@
     SaveButton.type = "button";
     SaveButton.value = "CONNECTING..."
 
+    const OuterUI = document.createElement("div")
+    OuterUI.id = "OuterLYTUI"
+    OuterUI.innerHTML = ``
+
+    const UI = document.getElementById("LYTUI")
+
     //#region Functions
 
     /**
      *  Injects CSS in to the current page
      *  if append is false it will remove all other injected css on the page
      *  if append is either true or null, it will append to the already injected css on the page
-     * @param {string} css 
-     * @param {Boolean | null} append 
-     * @returns Injected CSS Style Element
+     * 
+     *  @param {string} CSS
+     *  @param {Boolean | null} Append? 
+     *  @returns Injected CSS Style Element
      */
     function injectCSS(css, append) {
         if (append == null) append = true
