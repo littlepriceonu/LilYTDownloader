@@ -1,6 +1,17 @@
+:root {
+    --Accent: #c7b5e3;
+    --Primary: #d0b3ca;
+    --Secondary: #f5eff4;
+    --Text-color: #d8e1e9;
+    --Background: rgb(12 6 4);
+}
+
 div#OuterLYTUI {
     height: 100vh;
-    width: 100vh;
+    width: 100%;
+    
+    position: relative;
+    z-index: 1000;
     
     display: flex;
     align-items: center;
@@ -9,8 +20,82 @@ div#OuterLYTUI {
 }
 
 div#LYTUI {
-    width: 40vh;
-    height: 35vh;
+    width: 40%;
+    height: 30%;
 
-    background-color: rgb(32, 31, 59);
+    background-color: var(--Background);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 5%;
+
+    color: var(--Text-color)
+}
+
+input#LYTFileName {
+    width: 20rem;
+    height: 2.8rem;
+
+    margin-top: 1rem;
+    
+    background: var(--Primary);
+
+    transition: all .2s ease-in;
+
+    border: transparent solid 2px
+}
+
+input#LYTFileName:active {
+    border: var(--Accent) solid 2px
+    
+}
+
+input#LYTClose, input#LYTDownload {
+    margin-left: 0.5rem;
+
+    width: 8rem;
+    height: 2.8rem;
+
+    border-radius: 10%;
+
+    transition: all .2s ease-in;
+
+    background-color: var(--Primary);
+}
+
+input#LYTClose:hover, input#LYTDownload:hover {
+    scale: 1.05;
+}
+
+input#LYTClose:active, input#LYTDownload:active {
+    scale: 0.95;
+}
+
+div.LYTMainButtons {
+    margin-top: 2rem;
+    
+    display: flex;
+
+    justify-content: space-around;
+    align-items: center;
+}
+
+/* Save Button */
+
+input#LYTSaveButton {
+    cursor: pointer;
+
+    color: #fff;
+    background: none;
+    border: none;
+
+    padding: 0;
+    padding-top: 6px;
+    padding-bottom: 4px;
+    padding-left: 4px;
+
+    font-weight: 550;
 }

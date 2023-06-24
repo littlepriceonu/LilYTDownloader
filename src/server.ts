@@ -42,8 +42,8 @@ function removeLastDirFromString(dir: string[] | string, separator: string) {
 //#endregion
 
 const SocketHandlers = {
-    "DEBUG": function(msg: string, ..._: string[]) {
-        console.log(`[CLIENT] ${msg}`)
+    "DEBUG": function(userID: string, msg: string, ..._: string[]) {
+        console.log(`[CLIENT_${userID}] ${msg}`)
     },
     "DOWNLOAD_VIDEO": function(userID: string, vid: string, fileName: string, ..._: string[]) {
         if (!ytdl.validateID(vid)) {console.log(`[YTDL_CORE] Video ID ${vid} is invalid`); return;}
