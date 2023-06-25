@@ -18,6 +18,13 @@
 
     var LYT;
 
+    const ErrorMap = {
+        "EPREM": "No Permission To Create This File!",
+        "EISDIR": "File Name Invalid!",
+    }
+
+    var DownloadMessage;
+
     var CLIENT_ID = ""
 
     const ServerHandlers = {
@@ -25,10 +32,18 @@
             CLIENT_ID = id
         },
         "DOWNLOAD_COMPLETE": function(..._) {
+            DownloadMessage.style.opacity = "1"
+            DownloadMessage.style.color = "green"
+            DownloadMessage.innerText = "Download Complete!"
+
             console.log("[LYT] Download Finished!")
         },
-        "DOWNLOAD_ERROR": function(err, ..._) {
-            console.log(`[LYT] Download Error! ${err}`)
+        "DOWNLOAD_ERROR": function(errType, errMsg, ..._) {
+            DownloadMessage.style.opacity = "1"
+            DownloadMessage.style.color = "red"
+            DownloadMessage.innerText = ErrorMap[errType] ? ErrorMap[errType] : "An Error Occurred!"
+
+            console.log(`[LYT] Download Error(${errType}) ! ${errMsg}`)
         },
     }
 
@@ -41,35 +56,53 @@
     const OuterUI = document.createElement("div")
     OuterUI.id = "OuterLYTUI"
     OuterUI.style.display = "none"
+
+    //#region HTML & CSS`
+
     OuterUI.innerHTML = `
     <div id="LYTUI">
-        <h1>WOWOWOWOWOW</h1>
+    <h1 class="LYTText">LYT UI</h1>
 
-        <h1 class="FileNameText">File Name</h1>
-        <input id="LYTFileName" type="text">
+    <h1 class="InputNameText">Directory</h1>
+    <select name="Dir" class="LYTMainInput" id="LYTDir">
+        <option value="DOWNLOADS">Downloads</option>
+        <option value="CURRENT_USER">Current User</option>
+    </select>
 
-        <div class="LYTMainButtons">
-            <input id="LYTClose" type="button" value="Cancel">
-            <input id="LYTDownload" type="button" value="Download">
-        </div>
+    <h1 class="InputNameText">File Name</h1>
+    <input class="LYTMainInput" id="LYTFileName" type="text">
+
+    <div class="LYTMainButtons">
+        <input id="LYTClose" type="button" value="Cancel">
+        <input id="LYTDownload" type="button" value="Download">
     </div>
+
+    <h1 id="LYTDownloadMessage"></h1>
+</div>
     `
 
     injectCSS(`
     :root {
-        --Accent: #c7b5e3;
+        --Accent: #a368ff;
         --Primary: #d0b3ca;
         --Secondary: #f5eff4;
         --Text-color: #d8e1e9;
-        --Background: rgb(12 6 4);
+        --Background: #0f0f0f;
+    }
+    
+    .LYTText {
+        font-size: 7rem;
     }
     
     div#OuterLYTUI {
         height: 100vh;
         width: 100%;
         
-        position: relative;
+        position: absolute;
         z-index: 1000;
+    
+        top: 0;
+        left: 0;
         
         display: flex;
         align-items: center;
@@ -78,8 +111,8 @@
     }
     
     div#LYTUI {
-        width: 40%;
-        height: 30%;
+        width: 50%;
+        height: 45%;
     
         background-color: var(--Background);
     
@@ -93,11 +126,17 @@
         color: var(--Text-color)
     }
     
-    input#LYTFileName {
+    h1.InputNameText {
+        margin-top: 1rem;
+        width: 20rem;
+        text-align: left;
+    }
+    
+    .LYTMainInput {
         width: 20rem;
         height: 2.8rem;
     
-        margin-top: 1rem;
+        margin-top: 0.2rem;
         
         background: var(--Primary);
     
@@ -106,9 +145,9 @@
         border: transparent solid 2px
     }
     
-    input#LYTFileName:active {
-        border: var(--Accent) solid 2px
-        
+    .LYTMainInput:focus-visible {
+        border: var(--Accent) solid 2px;
+        outline: none;
     }
     
     input#LYTClose, input#LYTDownload {
@@ -141,6 +180,12 @@
         align-items: center;
     }
     
+    #LYTDownloadMessage {
+        margin-top: 1rem;
+        opacity: 0;
+        transition: all .3s ease-in;
+    }
+    
     /* Save Button */
     
     input#LYTSaveButton {
@@ -158,12 +203,16 @@
         font-weight: 550;
     }`)
 
+    //#endregion
+
     document.body.append(OuterUI)
 
     const UI = document.getElementById("LYTUI")
     const Close = document.getElementById("LYTClose")
     const Download = document.getElementById("LYTDownload")
     const FileName = document.getElementById("LYTFileName")
+    const Dir = document.getElementById("LYTDir")
+    DownloadMessage = document.getElementById("LYTDownloadMessage")
 
     //#region Functions
 
@@ -225,12 +274,20 @@
         LYT.onopen = ()=>{
             SaveButton.value = "SAVE"
 
+            DownloadMessage.style.color = "white"
+            DownloadMessage.style.opacity = "0"
+            DownloadMessage.innerText = ""
+
             console.log("[START_CONNECTION] WebSocket Opened!")
         }
 
         LYT.onmessage = HandleServerMessage
 
         LYT.onclose = ()=>{
+            DownloadMessage.style.color = "red"
+            DownloadMessage.style.opacity = "1"
+            DownloadMessage.innerText = "Server Lost Connection!"
+
             console.log("[LYT] Socket Connection Closed!")
             SaveButton.value = "CONNECTING..."
             StartConnection()
@@ -255,7 +312,10 @@
             console.log("[LYT] Subscribe Button Found!")
 
             Download.onclick = () => {
-                LYT.send(`DOWNLOAD_VIDEO|${CLIENT_ID}|${document.URL.split("?v=")[1]}|${FileName.value}`)
+                DownloadMessage.style.color = "white"
+                DownloadMessage.style.opacity = "1"
+                DownloadMessage.innerText = "Downloading..."
+                LYT.send(`DOWNLOAD_VIDEO|${CLIENT_ID}|${document.URL.split("?v=")[1]}|${FileName.value}|${Dir.value}`)
                 console.log(`[LYT] Downloading Video (${document.URL.split("?v=")[1]})...`)
             }
 
@@ -266,8 +326,14 @@
 
             SaveButton.onclick = () => {
                 if (LYT.readyState == LYT.OPEN) {
+                    DownloadMessage.style.color = "white"
+                    DownloadMessage.style.opacity = "0"
+                    DownloadMessage.innerText = ""
+                    
                     OuterUI.style.display = "flex"
                     FileName.value = ""
+
+                    OuterUI.style.top = pageYOffset.toString() + "px"
 
                     document.body.style.overflow = "hidden"
                 }
@@ -278,7 +344,6 @@
 
             var selector = `div#${el.id} > input`
 
-            
             const observer = new MutationObserver(mutations => {
                 if (!document.querySelector(selector)) {
                     console.log("[LYT] Youtube Removed Save Button! Adding Back...")

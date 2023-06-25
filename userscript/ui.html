@@ -1,11 +1,19 @@
 <div id="LYTUI">
-    <h1>WOWOWOWOWOW</h1>
+    <h1 class="LYTText">LYT UI</h1>
 
-    <h1 class="FileNameText">File Name</h1>
-    <input id="LYTFileName" type="text">
+    <h1 class="InputNameText">Directory</h1>
+    <select name="Dir" class="LYTMainInput" id="LYTDir">
+        <option value="DOWNLOADS">Downloads</option>
+        <option value="CURRENT_USER">Current User</option>
+    </select>
+
+    <h1 class="InputNameText">File Name</h1>
+    <input class="LYTMainInput" id="LYTFileName" type="text">
 
     <div class="LYTMainButtons">
         <input id="LYTClose" type="button" value="Cancel">
         <input id="LYTDownload" type="button" value="Download">
     </div>
+
+    <h1 id="LYTDownloadMessage"></h1>
 </div>
