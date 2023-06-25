@@ -68,6 +68,12 @@
     <div id="LYTUI">
     <h1 class="LYTText">LYT UI</h1>
 
+    <h1 class="InputNameText">Type</h1>
+    <select name="Dir" class="LYTMainInput" id="LYTType">
+        <option value="MP4">mp4</option>
+        <option value="MP3">mp3</option>
+    </select>
+
     <h1 class="InputNameText">Directory</h1>
     <select name="Dir" class="LYTMainInput" id="LYTDir">
         <option value="DOWNLOADS">Downloads</option>
@@ -217,6 +223,7 @@
     const Download = document.getElementById("LYTDownload")
     const FileName = document.getElementById("LYTFileName")
     const Dir = document.getElementById("LYTDir")
+    const Type = document.getElementById("LYTType")
     DownloadMessage = document.getElementById("LYTDownloadMessage")
 
     //#region Functions
@@ -320,7 +327,10 @@
                 DownloadMessage.style.color = "white"
                 DownloadMessage.style.opacity = "1"
                 DownloadMessage.innerText = "Downloading..."
-                LYT.send(`DOWNLOAD_VIDEO|${CLIENT_ID}|${document.URL.split("?v=")[1]}|${FileName.value}|${Dir.value}`)
+
+                var FilteredFileName = Type.value == "MP4" ? FileName.value + ".mp4" : FileName.value + ".mp3" 
+
+                LYT.send(`DOWNLOAD_VIDEO|${CLIENT_ID}|${document.URL.split("?v=")[1]}|${FilteredFileName}|${Dir.value}|${Type.value}`)
                 console.log(`[LYT] Downloading Video (${document.URL.split("?v=")[1]})...`)
             }
 

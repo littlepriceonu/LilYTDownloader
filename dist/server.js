@@ -54,11 +54,12 @@ const SocketHandlers = {
     "DEBUG": function (userID, msg, ..._) {
         console.log(`[CLIENT_${userID}] ${msg}`);
     },
-    "DOWNLOAD_VIDEO": function (userID, vid, fileName, dir, ..._) {
+    "DOWNLOAD_VIDEO": function (userID, vid, fileName, dir, type, ..._) {
         if (!ytdl.validateID(vid)) {
             console.log(`[YTDL_CORE] Video ID ${vid} is invalid`);
             return;
         }
+        const tempFileName = randomUUID();
         var AudioDownloaded = false;
         var VideoDownloaded = false;
         var ErrorOccured = false;
@@ -66,26 +67,52 @@ const SocketHandlers = {
         var __dir = DirMap[dir];
         var fullDir = __dir + "/" + fileName;
         var parentDir = __dir + "/" + removeLastDirFromString(fileName, "/");
+        if (!fs.existsSync(`${CurrentDir}/temp`)) {
+            fs.mkdirSync(`${CurrentDir}/temp`, { recursive: true });
+        }
         function HandleVideo() {
             // Make sure both files are downloaded
-            if (!AudioDownloaded || !VideoDownloaded || ErrorOccured)
+            if (ErrorOccured)
                 return;
-            // https://stackoverflow.com/questions/56734348/how-to-add-audio-to-video-with-node-fluent-ffmpeg
-            ffmpeg()
-                .addInput(`${CurrentDir}/tempVideo.mp4`)
-                .addInput(`${CurrentDir}/tempAudio.mp4`)
-                // I fucking hate ffmpeg it can suck my fucking balls
-                // https://superuser.com/questions/1584053/in-ffmpeg-why-wont-this-avc-video-convert-to-h264
-                .outputOptions(['-map 0:v', '-map 1:a', '-c:v copy', '-shortest'])
-                .saveToFile(fullDir).on('end', () => {
-                // Delete the 2 temp vids
-                fs.unlinkSync(`${CurrentDir}/tempVideo.mp4`);
-                fs.unlinkSync(`${CurrentDir}/tempAudio.mp4`);
-                // Let the client know we're done
-                Connections[userID].send("DOWNLOAD_COMPLETE|");
-            }).on("error", (err) => {
-                FFMPEGErrorHandlers.forEach(handler => handler(userID, err.toString()));
-            });
+            if (type == "MP4")
+                if (!AudioDownloaded || !VideoDownloaded)
+                    return;
+            if (type == "MP4") {
+                // https://stackoverflow.com/questions/56734348/how-to-add-audio-to-video-with-node-fluent-ffmpeg
+                ffmpeg()
+                    .addInput(`${CurrentDir}/temp/${tempFileName}_V.mp4`)
+                    .addInput(`${CurrentDir}/temp/${tempFileName}_A.mp4`)
+                    // I fucking hate ffmpeg it can suck my fucking balls
+                    // https://superuser.com/questions/1584053/in-ffmpeg-why-wont-this-avc-video-convert-to-h264
+                    .outputOptions(['-map 0:v', '-map 1:a', '-c:v copy', '-shortest'])
+                    .saveToFile(fullDir).on('end', () => {
+                    // Delete the 2 temp vids
+                    fs.unlinkSync(`${CurrentDir}/temp/${tempFileName}_V.mp4`);
+                    fs.unlinkSync(`${CurrentDir}/temp/${tempFileName}_A.mp4`);
+                    // Let the client know we're done
+                    Connections[userID].send("DOWNLOAD_COMPLETE|");
+                    console.log("[FFMPEG_MP4] Video Complete!");
+                }).on("error", (err) => {
+                    // If an error happened, run all the handlers, which will fix something (maybe) and let the client know
+                    FFMPEGErrorHandlers.forEach(handler => handler(userID, err.toString()));
+                });
+            }
+            else {
+                // https://superuser.com/questions/332347/how-can-i-convert-mp4-video-to-mp3-audio-with-ffmpeg
+                console.log(`[FFMPEG_MP3] ${fs.existsSync(`${CurrentDir}/temp/${tempFileName}_A.mp4`)}`);
+                ffmpeg()
+                    .addInput(`${CurrentDir}/temp/${tempFileName}_A.mp4`)
+                    .saveToFile(fullDir).on('end', () => {
+                    // Delete the Audio temp vid
+                    fs.unlinkSync(`${CurrentDir}/temp/${tempFileName}_A.mp4`);
+                    // Let the client know we're done
+                    Connections[userID].send("DOWNLOAD_COMPLETE|");
+                    console.log("[FFMPEG_MP3] Audio Complete!");
+                }).on("error", (err) => {
+                    // If an error happened, run all the handlers, which will fix something (maybe) and let the client know
+                    FFMPEGErrorHandlers.forEach(handler => handler(userID, err.toString()));
+                });
+            }
         }
         console.log(`[YTDL_CORE] Video ID valid, installing video to ${fullDir}...`);
         if (!fs.existsSync(parentDir)) {
@@ -98,25 +125,29 @@ const SocketHandlers = {
                 return;
             }
         }
-        ytdl(`http://youtube.com/watch?v=${vid}`, { filter: (format) => { return format.quality == "hd1080" && format.mimeType.includes("video/mp4") && format.hasVideo; } }).pipe(fs.createWriteStream(`${CurrentDir}/tempVideo.mp4`)).on('finish', () => {
-            VideoDownloaded = true;
-            console.log("[YTDL_CORE] Video Download Complete!");
-            HandleVideo();
-        }).on("error", (err) => {
-            if (ErrorOccured)
-                return;
-            console.log(`[YTDL_CORE] Error while downloading! Name: ${err.name} | Message: ${err.message}`);
-            Connections[userID].send(`DOWNLOAD_ERROR|${err.message.split(":")[0]}|${err.message}`);
-            ErrorOccured = true;
-        });
-        ytdl(`http://youtube.com/watch?v=${vid}`, { filter: (format) => { return format.quality == "hd720" && format.mimeType.includes("video/mp4") && format.hasAudio; } }).pipe(fs.createWriteStream(`${CurrentDir}/tempAudio.mp4`)).on('finish', () => {
+        // Download Video
+        if (type == "MP4") {
+            ytdl(`http://youtube.com/watch?v=${vid}`, { quality: "highestvideo", filter: (format) => { return format.mimeType.includes("video/mp4") && format.hasVideo; } }).pipe(fs.createWriteStream(`${CurrentDir}/temp/${tempFileName}_V.mp4`)).on('finish', () => {
+                VideoDownloaded = true;
+                console.log("[YTDL_CORE] Video Download Complete!");
+                HandleVideo();
+            }).on("error", (err) => {
+                if (ErrorOccured)
+                    return;
+                console.log(`[YTDL_CORE] Error while downloading video! Name: ${err.name} | Message: ${err.message}`);
+                Connections[userID].send(`DOWNLOAD_ERROR|${err.message.split(":")[0]}|${err.message}`);
+                ErrorOccured = true;
+            });
+        }
+        // Download Audio
+        ytdl(`http://youtube.com/watch?v=${vid}`, { quality: "highestaudio", filter: (format) => { return format.mimeType.includes("video/mp4") && format.hasAudio; } }).pipe(fs.createWriteStream(`${CurrentDir}/temp/${tempFileName}_A.mp4`)).on('finish', () => {
             AudioDownloaded = true;
             console.log("[YTDL_CORE] Audio Download Complete!");
             HandleVideo();
         }).on("error", (err) => {
             if (ErrorOccured)
                 return;
-            console.log(`[YTDL_CORE] Error while downloading! Name: ${err.name} | Message: ${err.message}`);
+            console.log(`[YTDL_CORE] Error while downloading audio! Name: ${err.name} | Message: ${err.message}`);
             Connections[userID].send(`DOWNLOAD_ERROR|${err.message.split(":")[0]}|${err.message}`);
             ErrorOccured = true;
         });
