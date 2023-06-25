@@ -40,6 +40,19 @@ const PORT = 5020
 
 const YTSocket = new ws.WebSocketServer({ port: PORT })
 
+const FFMPEGErrorHandlers = [
+    function (userID: string, err: string) {
+        err = err.replaceAll("\n", "")
+        console.log(`[FFMPEG_ERR] ${err}`)
+        
+        console.log(err.includes("Invalid argument"))
+
+        if (err.includes("Invalid argument")) {
+            Connections[userID].send("DOWNLOAD_ERROR|INVALID_ARGUMENT|FFMPEG detected an invalid file name argument")
+        }
+    },
+]
+
 //#region Functions
 
 function removeLastDirFromString(dir: string[] | string, separator: string) {
@@ -89,14 +102,21 @@ const SocketHandlers = {
                 // Let the client know we're done
                 Connections[userID].send("DOWNLOAD_COMPLETE|")
             }).on("error", (err) => {
-                console.log(`[FFMPEG] Error Occured! ${err}`)
+                FFMPEGErrorHandlers.forEach(handler => handler(userID, err.toString()))
             })
         }
 
         console.log(`[YTDL_CORE] Video ID valid, installing video to ${fullDir}...`)
 
         if (!fs.existsSync(parentDir)) {
-            fs.mkdirSync(parentDir, { recursive: true });
+            try {
+                fs.mkdirSync(parentDir, { recursive: true });
+            }
+            catch (err) {
+                console.log(`[FS_MKDIR] Error occured while attempting to create directory. ${err}`)
+                Connections[userID].send("DOWNLOAD_ERROR|DIRECTORY_ERROR")
+                return
+            }
         }
 
         ytdl(`http://youtube.com/watch?v=${vid}`, {filter: (format)=>{return format.quality == "hd1080" && format.mimeType.includes("video/mp4") && format.hasVideo}}).pipe(fs.createWriteStream(`${CurrentDir}/tempVideo.mp4`)).on('finish', ()=>{

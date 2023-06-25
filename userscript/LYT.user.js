@@ -21,6 +21,8 @@
     const ErrorMap = {
         "EPREM": "No Permission To Create This File!",
         "EISDIR": "File Name Invalid!",
+        "INVALID_ARGUMENT": "File Name Invalid!",
+        "DIRECTORY_ERROR": "File Name Invalid!"
     }
 
     var DownloadMessage;
@@ -42,6 +44,9 @@
             DownloadMessage.style.opacity = "1"
             DownloadMessage.style.color = "red"
             DownloadMessage.innerText = ErrorMap[errType] ? ErrorMap[errType] : "An Error Occurred!"
+
+            console.log(ErrorMap[errType])
+            console.log(ErrorMap[errType] ? ErrorMap[errType] : "An Error Occurred!")
 
             console.log(`[LYT] Download Error(${errType}) ! ${errMsg}`)
         },
