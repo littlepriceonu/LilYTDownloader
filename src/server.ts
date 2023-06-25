@@ -118,8 +118,6 @@ const SocketHandlers = {
             }
             else {
                 // https://superuser.com/questions/332347/how-can-i-convert-mp4-video-to-mp3-audio-with-ffmpeg
-                console.log(`[FFMPEG_MP3] ${fs.existsSync(`${CurrentDir}/temp/${tempFileName}_A.mp4`)}`)
-
                 ffmpeg()
                 .addInput(`${CurrentDir}/temp/${tempFileName}_A.mp4`)
                 .saveToFile(fullDir).on('end', ()=>{

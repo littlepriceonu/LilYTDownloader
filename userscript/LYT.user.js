@@ -18,6 +18,8 @@
 
     var LYT;
 
+    var IsInUI = false;
+
     const ErrorMap = {
         "EPREM": "No Permission To Create This File!",
         "EISDIR": "File Name Invalid!",
@@ -62,6 +64,15 @@
     OuterUI.id = "OuterLYTUI"
     OuterUI.style.display = "none"
 
+    OuterUI.onclick = (e) => {
+        if (e.target == OuterUI) {
+            OuterUI.style.display = "none"
+            document.body.style.overflow = "auto"
+
+            IsInUI = false;
+        }
+    }
+
     //#region HTML & CSS`
 
     OuterUI.innerHTML = `
@@ -70,8 +81,8 @@
 
     <h1 class="InputNameText">Type</h1>
     <select name="Dir" class="LYTMainInput" id="LYTType">
-        <option value="MP4">mp4</option>
-        <option value="MP3">mp3</option>
+        <option value="MP4">Video</option>
+        <option value="MP3">Audio</option>
     </select>
 
     <h1 class="InputNameText">Directory</h1>
@@ -226,6 +237,18 @@
     const Type = document.getElementById("LYTType")
     DownloadMessage = document.getElementById("LYTDownloadMessage")
 
+    // Key Event Listener
+    addEventListener("keyup", (e) => {
+        console.log(e)
+        if (e.key == "Escape" && IsInUI) {
+            Close.click()
+        } 
+
+        if (e.key == "Enter" && IsInUI) {
+            Download.click()
+        }
+    })
+
     //#region Functions
 
     /**
@@ -337,10 +360,13 @@
             Close.onclick = () => {
                 OuterUI.style.display = "none"
                 document.body.style.overflow = "auto"
+                IsInUI = false;
             }
 
             SaveButton.onclick = () => {
                 if (LYT.readyState == LYT.OPEN) {
+                    IsInUI = true;
+
                     DownloadMessage.style.color = "white"
                     DownloadMessage.style.opacity = "0"
                     DownloadMessage.innerText = ""
