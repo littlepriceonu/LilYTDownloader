@@ -1,16 +1,22 @@
-import ytdl from 'ytdl-core';
-import path from 'path';
-import * as fs from 'fs';
-import * as ws from 'ws';
-import { randomUUID } from 'crypto';
-import { fileURLToPath } from 'url';
-import os from 'os';
-import ffmpegPath from '@ffmpeg-installer/ffmpeg';
-import ffmpeg from 'fluent-ffmpeg';
-ffmpeg.setFfmpegPath(ffmpegPath.path)
+// Old imports from module
+// import { fileURLToPath } from 'url';
+// import path from 'path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import ytdl = require('ytdl-core')
+import fs = require('fs')
+import ws = require('ws')
+import crypto = require('crypto')
+const randomUUID = crypto.randomUUID
+import os = require('os')
+import path = require('path')
+import electron = require('electron')
+const app = electron.app
+const BrowserWindow = electron.BrowserWindow
+const ipcMain = electron.ipcMain
+const shell = electron.shell
+import ffmpegPath = require("@ffmpeg-installer/ffmpeg")
+import ffmpeg = require('fluent-ffmpeg')
+ffmpeg.setFfmpegPath(ffmpegPath.path)
 
 // TODO
 // Install entire playlists to a folder
@@ -29,12 +35,14 @@ const __dirname = path.dirname(__filename);
 
 const Username = os.userInfo().username
 
+var mainWindow: electron.BrowserWindow
+
 const DirMap = {
     "DOWNLOADS": `C:/Users/${Username}/Downloads`,
     "CURRENT_USER": `C:/`
 }
 
-var Connections: {[id: string]: ws} = {}
+var Connections: { [id: string]: ws } = {}
 
 const PORT = 5020
 
@@ -44,7 +52,7 @@ const FFMPEGErrorHandlers = [
     function (userID: string, err: string) {
         err = err.replaceAll("\n", "")
         console.log(`[FFMPEG_ERR] ${err}`)
-        
+
         console.log(err.includes("Invalid argument"))
 
         if (err.includes("Invalid argument")) {
@@ -63,14 +71,34 @@ function removeLastDirFromString(dir: string[] | string, separator: string) {
     return dir
 }
 
+function sendMessageToClient(type: string, data: any) {
+    mainWindow.webContents.send(type, data)
+}
+
+function createWindow() {
+    // Create the browser window.
+    mainWindow = new BrowserWindow({
+        width: 1040,
+        height: 600,
+        minWidth: 1040,
+        minHeight: 600,
+        webPreferences: {
+            preload: path.join(__dirname, 'window/preload.js')
+        }
+    })
+
+    // and load the index.html of the app.
+    mainWindow.loadFile('./dist/window/LYT.html')
+}
+
 //#endregion
 
 const SocketHandlers = {
-    "DEBUG": function(userID: string, msg: string, ..._: string[]) {
+    "DEBUG": function (userID: string, msg: string, ..._: string[]) {
         console.log(`[CLIENT_${userID}] ${msg}`)
     },
-    "DOWNLOAD_VIDEO": function(userID: string, vid: string, fileName: string, dir: string, type: string, ..._: string[]) {
-        if (!ytdl.validateID(vid)) {console.log(`[YTDL_CORE] Video ID ${vid} is invalid`); return;}  
+    "DOWNLOAD_VIDEO": function (userID: string, vid: string, fileName: string, dir: string, type: string, ..._: string[]) {
+        if (!ytdl.validateID(vid)) { console.log(`[YTDL_CORE] Video ID ${vid} is invalid`); return; }
 
         const tempFileName = randomUUID()
 
@@ -86,7 +114,7 @@ const SocketHandlers = {
         var parentDir = __dir + "/" + removeLastDirFromString(fileName, "/")
 
         if (!fs.existsSync(`${CurrentDir}/temp`)) {
-            fs.mkdirSync(`${CurrentDir}/temp`, {recursive: true})
+            fs.mkdirSync(`${CurrentDir}/temp`, { recursive: true })
         }
 
         function HandleVideo() {
@@ -97,41 +125,41 @@ const SocketHandlers = {
             if (type == "MP4") {
                 // https://stackoverflow.com/questions/56734348/how-to-add-audio-to-video-with-node-fluent-ffmpeg
                 ffmpeg()
-                .addInput(`${CurrentDir}/temp/${tempFileName}_V.mp4`)
-                .addInput(`${CurrentDir}/temp/${tempFileName}_A.mp4`)
-                // I fucking hate ffmpeg it can suck my fucking balls
-                // https://superuser.com/questions/1584053/in-ffmpeg-why-wont-this-avc-video-convert-to-h264
-                .outputOptions(['-map 0:v', '-map 1:a', '-c:v copy', '-shortest'])
-                .saveToFile(fullDir).on('end', ()=>{
-                    // Delete the 2 temp vids
-                    fs.unlinkSync(`${CurrentDir}/temp/${tempFileName}_V.mp4`)
-                    fs.unlinkSync(`${CurrentDir}/temp/${tempFileName}_A.mp4`)
+                    .addInput(`${CurrentDir}/temp/${tempFileName}_V.mp4`)
+                    .addInput(`${CurrentDir}/temp/${tempFileName}_A.mp4`)
+                    // I fucking hate ffmpeg it can suck my fucking balls
+                    // https://superuser.com/questions/1584053/in-ffmpeg-why-wont-this-avc-video-convert-to-h264
+                    .outputOptions(['-map 0:v', '-map 1:a', '-c:v copy', '-shortest'])
+                    .saveToFile(fullDir).on('end', () => {
+                        // Delete the 2 temp vids
+                        fs.unlinkSync(`${CurrentDir}/temp/${tempFileName}_V.mp4`)
+                        fs.unlinkSync(`${CurrentDir}/temp/${tempFileName}_A.mp4`)
 
-                    // Let the client know we're done
-                    Connections[userID].send("DOWNLOAD_COMPLETE|")
+                        // Let the client know we're done
+                        Connections[userID].send("DOWNLOAD_COMPLETE|")
 
-                    console.log("[FFMPEG_MP4] Video Complete!")
-                }).on("error", (err) => {
-                    // If an error happened, run all the handlers, which will fix something (maybe) and let the client know
-                    FFMPEGErrorHandlers.forEach(handler => handler(userID, err.toString()))
-                })
+                        console.log("[FFMPEG_MP4] Video Complete!")
+                    }).on("error", (err) => {
+                        // If an error happened, run all the handlers, which will fix something (maybe) and let the client know
+                        FFMPEGErrorHandlers.forEach(handler => handler(userID, err.toString()))
+                    })
             }
             else {
                 // https://superuser.com/questions/332347/how-can-i-convert-mp4-video-to-mp3-audio-with-ffmpeg
                 ffmpeg()
-                .addInput(`${CurrentDir}/temp/${tempFileName}_A.mp4`)
-                .saveToFile(fullDir).on('end', ()=>{
-                    // Delete the Audio temp vid
-                    fs.unlinkSync(`${CurrentDir}/temp/${tempFileName}_A.mp4`)
-    
-                    // Let the client know we're done
-                    Connections[userID].send("DOWNLOAD_COMPLETE|")
-    
-                    console.log("[FFMPEG_MP3] Audio Complete!")
-                }).on("error", (err) => {
-                    // If an error happened, run all the handlers, which will fix something (maybe) and let the client know
-                    FFMPEGErrorHandlers.forEach(handler => handler(userID, err.toString()))
-                })
+                    .addInput(`${CurrentDir}/temp/${tempFileName}_A.mp4`)
+                    .saveToFile(fullDir).on('end', () => {
+                        // Delete the Audio temp vid
+                        fs.unlinkSync(`${CurrentDir}/temp/${tempFileName}_A.mp4`)
+
+                        // Let the client know we're done
+                        Connections[userID].send("DOWNLOAD_COMPLETE|")
+
+                        console.log("[FFMPEG_MP3] Audio Complete!")
+                    }).on("error", (err) => {
+                        // If an error happened, run all the handlers, which will fix something (maybe) and let the client know
+                        FFMPEGErrorHandlers.forEach(handler => handler(userID, err.toString()))
+                    })
             }
         }
 
@@ -150,7 +178,7 @@ const SocketHandlers = {
 
         // Download Video
         if (type == "MP4") {
-            ytdl(`http://youtube.com/watch?v=${vid}`, {quality:"highestvideo", filter: (format)=>{return format.mimeType.includes("video/mp4") && format.hasVideo}}).pipe(fs.createWriteStream(`${CurrentDir}/temp/${tempFileName}_V.mp4`)).on('finish', ()=>{
+            ytdl(`http://youtube.com/watch?v=${vid}`, { quality: "highestvideo", filter: (format) => { return format.mimeType.includes("video/mp4") && format.hasVideo } }).pipe(fs.createWriteStream(`${CurrentDir}/temp/${tempFileName}_V.mp4`)).on('finish', () => {
                 VideoDownloaded = true
 
                 console.log("[YTDL_CORE] Video Download Complete!")
@@ -167,7 +195,7 @@ const SocketHandlers = {
         }
 
         // Download Audio
-        ytdl(`http://youtube.com/watch?v=${vid}`, {quality:"highestaudio", filter: (format)=>{return format.mimeType.includes("video/mp4") && format.hasAudio}}).pipe(fs.createWriteStream(`${CurrentDir}/temp/${tempFileName}_A.mp4`)).on('finish', ()=>{
+        ytdl(`http://youtube.com/watch?v=${vid}`, { quality: "highestaudio", filter: (format) => { return format.mimeType.includes("video/mp4") && format.hasAudio } }).pipe(fs.createWriteStream(`${CurrentDir}/temp/${tempFileName}_A.mp4`)).on('finish', () => {
             AudioDownloaded = true
 
             console.log("[YTDL_CORE] Audio Download Complete!")
@@ -202,7 +230,7 @@ YTSocket.on('connection', function (con) {
 
         const fullData = [userID, ...msgData]
 
-        if (!Connections[userID]) {con.send("ID_INCORRECT|"); return;}
+        if (!Connections[userID]) { con.send("ID_INCORRECT|"); return; }
 
         if (SocketHandlers[msgID]) {
             SocketHandlers[msgID](...fullData)
@@ -215,6 +243,26 @@ YTSocket.on('connection', function (con) {
 
     con.send(`CLIENT_ID|${id}`)
 
+})
+
+app.whenReady().then(() => {
+    createWindow()
+
+    app.on('activate', () => {
+        if (BrowserWindow.getAllWindows().length === 0) {
+            createWindow()
+        }
+    })
+})
+
+app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+        app.quit()
+    }
+})
+
+ipcMain.on('open-url', (_, url: string)=>{
+    shell.openExternal(url)
 })
 
 console.log(`[LYT] Listening on port ${PORT}`)

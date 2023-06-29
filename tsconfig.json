@@ -2,13 +2,12 @@
     "compilerOptions": {
       "noImplicitAny": false,
       "noEmitOnError": true,
-      "removeComments": false,
+      "removeComments": true,
       "sourceMap": true,
-      "target": "ES2022",
+      "target": "ES2021",
       "outDir": "dist/",
       "moduleResolution":"node",
-      "allowSyntheticDefaultImports": true,
-      "module": "es2022"
+      "module": "CommonJS",
     },
     "include": [
       "src/**/*"
