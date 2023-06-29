@@ -3,25 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="renderer.js"></script>
+    <!-- Stupid Hack for typescipt being stupid -->
+    <script defer> var exports = {}; </script>
+    <script defer src="renderer.js"></script>
     <link rel="stylesheet" href="LYT.css">
     <title>LYT Console</title>
 </head>
 <body class="text-white">
     <div class="flex flex-row w-full h-full">
         <div id="SideBar" class="w-[30%] h-full bg-slate-800 flex-col items-center justify-start">
-            <div class="w-full h-20 border-slate-950 border-2 bg-transparent flex flex-col p-2 cursor-pointer">
+            <div class="videoDisplay w-full h-20 border-slate-950 border-2 bg-transparent flex flex-col p-2 cursor-pointer mt-2">
                 <div class="flex flex-row">
                     <img src="https://i.ytimg.com/vi/O-6kbagEmKA/default.jpg" alt="Thumbnail" class="videoThumbnail h-10 mr-2">
-                    <h1 class="videoDescription h-10 text-ellipsis whitespace-nowrap flex justify-center items-center">Automating Youtube Channels With Computer Science</h1>
+                    <h1 class="videoDescription scrollbar scrollbar-track-slate-900 scrollbar-thumb-slate-950 h-10 text-ellipsis flex justify-center items-start">Automating Youtube Channels With Computer Science</h1>
                 </div>
+
+                <div class="flex flex-row text-sm">
+                    <p class="videoId" >ID: O-6kbagEmKA</p>
+                </div>
+            </div>
+
+            <div class="w-full h-20 border-slate-950 border-2 bg-transparent flex flex-col p-2 cursor-pointer mt-1">
+                <div class="flex flex-row">
+                    <img src="https://i.ytimg.com/vi/O-6kbagEmKA/default.jpg" alt="Thumbnail" class="videoThumbnail h-10 mr-2">
+                    <h1 class="videoDescription scrollbar scrollbar-track-slate-900 scrollbar-thumb-slate-950 h-10 text-ellipsis flex justify-center items-start">Automating Youtube Channels With Computer Science</h1>
+                </div>
+
                 <div class="flex flex-row text-sm">
                     <p class="videoId" >ID: O-6kbagEmKA</p>
                 </div>
             </div>
         </div>
         <div id="DownloadInfo" class="w-[70%] h-full bg-slate-900 relative">
-            <div class="w-full h-full absolute bg-transparent flex flex-col justify-center items-center">
+            <div class="w-full h-full absolute bg-transparent flex flex-col justify-center items-center -z-10 ContentActive">
                 <h1 class="text-3xl">
                     LilYTDownloader
                 </h1>
@@ -32,7 +46,7 @@
                 </div>
             </div>
             
-            <div class="w-full h-full absolute">
+            <div class="w-full h-full absolute -z-10">
 
             </div>
         </div>

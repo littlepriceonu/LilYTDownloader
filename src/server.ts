@@ -39,7 +39,7 @@ var mainWindow: electron.BrowserWindow
 
 const DirMap = {
     "DOWNLOADS": `C:/Users/${Username}/Downloads`,
-    "CURRENT_USER": `C:/`
+    "CURRENT_USER": `C:/Users/${Username}`
 }
 
 var Connections: { [id: string]: ws } = {}
@@ -60,6 +60,10 @@ const FFMPEGErrorHandlers = [
         }
     },
 ]
+
+var appReady = false;
+
+const Region = "SERVER"
 
 //#region Functions
 
@@ -91,14 +95,42 @@ function createWindow() {
     mainWindow.loadFile('./dist/window/LYT.html')
 }
 
+function CLog(type: string, ...toLog:any[]) {
+    console.log(`[${type}]`, ...toLog)
+}
+
+function Log(...toLog: any[]) {
+    console.log(`[${Region}]`, ...toLog)
+}
+
 //#endregion
+
+const IPCHandlers = {
+    // Open URL in system browser
+    'open-url': (_: electron.IpcMainEvent, url: string)=>{
+        CLog("OPEN_URL", `Opening URL: ${url}`)
+        shell.openExternal(url)
+    },
+}
 
 const SocketHandlers = {
     "DEBUG": function (userID: string, msg: string, ..._: string[]) {
-        console.log(`[CLIENT_${userID}] ${msg}`)
+        CLog(`CLIENT_${userID}`, `${msg}`)
     },
     "DOWNLOAD_VIDEO": function (userID: string, vid: string, fileName: string, dir: string, type: string, ..._: string[]) {
-        if (!ytdl.validateID(vid)) { console.log(`[YTDL_CORE] Video ID ${vid} is invalid`); return; }
+        if (!appReady) {CLog('YTDL_CORE', `Download Requested but App is not loaded!`)}
+        if (!ytdl.validateID(vid)) { CLog(`YTDL_CORE`, `Video ID ${vid} is invalid`); return; }
+
+        const __dir = DirMap[dir]
+        const fullDir = __dir + "/" + fileName
+
+        sendMessageToClient("event-message", ["DOWNLOAD_REQUESTED", {
+            vid: vid,
+            fileName: fileName,
+            dir: __dir,
+            fullDir: fullDir,
+            type: type,
+        }])
 
         const tempFileName = randomUUID()
 
@@ -106,12 +138,8 @@ const SocketHandlers = {
         var VideoDownloaded = false;
         var ErrorOccured = false;
 
-        var CurrentDir = removeLastDirFromString(__dirname, "\\")
-
-        var __dir = DirMap[dir]
-
-        var fullDir = __dir + "/" + fileName
-        var parentDir = __dir + "/" + removeLastDirFromString(fileName, "/")
+        const CurrentDir = removeLastDirFromString(__dirname, "\\")
+        const parentDir = __dir + "/" + removeLastDirFromString(fileName, "/")
 
         if (!fs.existsSync(`${CurrentDir}/temp`)) {
             fs.mkdirSync(`${CurrentDir}/temp`, { recursive: true })
@@ -138,7 +166,7 @@ const SocketHandlers = {
                         // Let the client know we're done
                         Connections[userID].send("DOWNLOAD_COMPLETE|")
 
-                        console.log("[FFMPEG_MP4] Video Complete!")
+                        CLog("FFMPEG_MP4", "Video Complete!")
                     }).on("error", (err) => {
                         // If an error happened, run all the handlers, which will fix something (maybe) and let the client know
                         FFMPEGErrorHandlers.forEach(handler => handler(userID, err.toString()))
@@ -155,7 +183,7 @@ const SocketHandlers = {
                         // Let the client know we're done
                         Connections[userID].send("DOWNLOAD_COMPLETE|")
 
-                        console.log("[FFMPEG_MP3] Audio Complete!")
+                        CLog("FFMPEG_MP3", "Audio Complete!")
                     }).on("error", (err) => {
                         // If an error happened, run all the handlers, which will fix something (maybe) and let the client know
                         FFMPEGErrorHandlers.forEach(handler => handler(userID, err.toString()))
@@ -163,14 +191,14 @@ const SocketHandlers = {
             }
         }
 
-        console.log(`[YTDL_CORE] Video ID valid, installing video to ${fullDir}...`)
+        CLog(`YTDL_CORE`, `Video ID valid, installing video to ${fullDir}...`)
 
         if (!fs.existsSync(parentDir)) {
             try {
                 fs.mkdirSync(parentDir, { recursive: true });
             }
             catch (err) {
-                console.log(`[FS_MKDIR] Error occured while attempting to create directory. ${err}`)
+                CLog(`FS_MKDIR`, `Error occured while attempting to create directory. ${err}`)
                 Connections[userID].send("DOWNLOAD_ERROR|DIRECTORY_ERROR")
                 return
             }
@@ -181,13 +209,13 @@ const SocketHandlers = {
             ytdl(`http://youtube.com/watch?v=${vid}`, { quality: "highestvideo", filter: (format) => { return format.mimeType.includes("video/mp4") && format.hasVideo } }).pipe(fs.createWriteStream(`${CurrentDir}/temp/${tempFileName}_V.mp4`)).on('finish', () => {
                 VideoDownloaded = true
 
-                console.log("[YTDL_CORE] Video Download Complete!")
+                CLog("YTDL_CORE", "Video Download Complete!")
 
                 HandleVideo()
             }).on("error", (err) => {
                 if (ErrorOccured) return;
 
-                console.log(`[YTDL_CORE] Error while downloading video! Name: ${err.name} | Message: ${err.message}`)
+                CLog(`YTDL_CORE`,  `Error while downloading video! Name: ${err.name} | Message: ${err.message}`)
                 Connections[userID].send(`DOWNLOAD_ERROR|${err.message.split(":")[0]}|${err.message}`)
 
                 ErrorOccured = true;
@@ -198,13 +226,13 @@ const SocketHandlers = {
         ytdl(`http://youtube.com/watch?v=${vid}`, { quality: "highestaudio", filter: (format) => { return format.mimeType.includes("video/mp4") && format.hasAudio } }).pipe(fs.createWriteStream(`${CurrentDir}/temp/${tempFileName}_A.mp4`)).on('finish', () => {
             AudioDownloaded = true
 
-            console.log("[YTDL_CORE] Audio Download Complete!")
+            CLog("YTDL_CORE", "Audio Download Complete!")
 
             HandleVideo()
         }).on("error", (err) => {
             if (ErrorOccured) return;
 
-            console.log(`[YTDL_CORE] Error while downloading audio! Name: ${err.name} | Message: ${err.message}`)
+            CLog(`YTDL_CORE`, `Error while downloading audio! Name: ${err.name} | Message: ${err.message}`)
             Connections[userID].send(`DOWNLOAD_ERROR|${err.message.split(":")[0]}|${err.message}`)
 
             ErrorOccured = true;
@@ -214,7 +242,7 @@ const SocketHandlers = {
 
 YTSocket.on('connection', function (con) {
 
-    console.log("[ON_CONNECTION] Client Connection Started...")
+    CLog("ON_CONNECTION", "Client Connection Started...")
 
     // make it so the ID has a common placement in the string sent so it would be like
     // SOME_ID|User's Id|Data goes here|more data here|even more here
@@ -248,21 +276,26 @@ YTSocket.on('connection', function (con) {
 app.whenReady().then(() => {
     createWindow()
 
+    // MacOS stuff
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
             createWindow()
         }
     })
+
+    appReady = true
 })
 
+// Close the app if all our windows are closed
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
+        YTSocket.close()
         app.quit()
     }
 })
 
-ipcMain.on('open-url', (_, url: string)=>{
-    shell.openExternal(url)
+Object.entries(IPCHandlers).forEach(handler => {
+    ipcMain.on(handler[0], handler[1])
 })
 
-console.log(`[LYT] Listening on port ${PORT}`)
+Log(`Listening on port ${PORT}`)

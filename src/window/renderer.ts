@@ -1,4 +1,9 @@
+import { YoutubeDownloadRequest } from "./window"
+
 const _Region = "RENDERER"
+
+const videoDisplay = document.getElementsByClassName('videoDisplay').item(0)
+videoDisplay.remove()
 
 //#region Functions
 
@@ -12,10 +17,24 @@ function Log_(...toLog: any[]) {
 
 //#endregion
 
-Array.from(document.getElementsByClassName("a")).forEach((el: HTMLAnchorElement) => {
-    el.onclick = () => {
-        window.IPC.send("open-url", el.href)
+//#region Misc
+
+Array.from(document.getElementsByTagName("a")).forEach((el: HTMLAnchorElement) => {
+    el.onclick = (e) => {
+        if (!el.href) return
+
+        e.preventDefault()
+        window.IPC.sendURL(el.href)
     }
 })
 
-Log_("Hello World!")
+//#endregion
+
+//#region Main Functionality
+
+window.IPC.subscribeToEvent("DOWNLOAD_REQUESTED", (data: YoutubeDownloadRequest) => {
+    Log_("data:", data)
+    Log_("vid:", data.vid)
+})
+
+//#endregion

@@ -19,7 +19,7 @@ const Username = os.userInfo().username;
 var mainWindow;
 const DirMap = {
     "DOWNLOADS": `C:/Users/${Username}/Downloads`,
-    "CURRENT_USER": `C:/`
+    "CURRENT_USER": `C:/Users/${Username}`
 };
 var Connections = {};
 const PORT = 5020;
@@ -34,6 +34,8 @@ const FFMPEGErrorHandlers = [
         }
     },
 ];
+var appReady = false;
+const Region = "SERVER";
 function removeLastDirFromString(dir, separator) {
     dir = dir.split(separator);
     dir.pop();
@@ -55,23 +57,45 @@ function createWindow() {
     });
     mainWindow.loadFile('./dist/window/LYT.html');
 }
+function CLog(type, ...toLog) {
+    console.log(`[${type}]`, ...toLog);
+}
+function Log(...toLog) {
+    console.log(`[${Region}]`, ...toLog);
+}
+const IPCHandlers = {
+    'open-url': (_, url) => {
+        CLog("OPEN_URL", `Opening URL: ${url}`);
+        shell.openExternal(url);
+    },
+};
 const SocketHandlers = {
     "DEBUG": function (userID, msg, ..._) {
-        console.log(`[CLIENT_${userID}] ${msg}`);
+        CLog(`CLIENT_${userID}`, `${msg}`);
     },
     "DOWNLOAD_VIDEO": function (userID, vid, fileName, dir, type, ..._) {
+        if (!appReady) {
+            CLog('YTDL_CORE', `Download Requested but App is not loaded!`);
+        }
         if (!ytdl.validateID(vid)) {
-            console.log(`[YTDL_CORE] Video ID ${vid} is invalid`);
+            CLog(`YTDL_CORE`, `Video ID ${vid} is invalid`);
             return;
         }
+        const __dir = DirMap[dir];
+        const fullDir = __dir + "/" + fileName;
+        sendMessageToClient("event-message", ["DOWNLOAD_REQUESTED", {
+                vid: vid,
+                fileName: fileName,
+                dir: __dir,
+                fullDir: fullDir,
+                type: type,
+            }]);
         const tempFileName = randomUUID();
         var AudioDownloaded = false;
         var VideoDownloaded = false;
         var ErrorOccured = false;
-        var CurrentDir = removeLastDirFromString(__dirname, "\\");
-        var __dir = DirMap[dir];
-        var fullDir = __dir + "/" + fileName;
-        var parentDir = __dir + "/" + removeLastDirFromString(fileName, "/");
+        const CurrentDir = removeLastDirFromString(__dirname, "\\");
+        const parentDir = __dir + "/" + removeLastDirFromString(fileName, "/");
         if (!fs.existsSync(`${CurrentDir}/temp`)) {
             fs.mkdirSync(`${CurrentDir}/temp`, { recursive: true });
         }
@@ -90,7 +114,7 @@ const SocketHandlers = {
                     fs.unlinkSync(`${CurrentDir}/temp/${tempFileName}_V.mp4`);
                     fs.unlinkSync(`${CurrentDir}/temp/${tempFileName}_A.mp4`);
                     Connections[userID].send("DOWNLOAD_COMPLETE|");
-                    console.log("[FFMPEG_MP4] Video Complete!");
+                    CLog("FFMPEG_MP4", "Video Complete!");
                 }).on("error", (err) => {
                     FFMPEGErrorHandlers.forEach(handler => handler(userID, err.toString()));
                 });
@@ -101,19 +125,19 @@ const SocketHandlers = {
                     .saveToFile(fullDir).on('end', () => {
                     fs.unlinkSync(`${CurrentDir}/temp/${tempFileName}_A.mp4`);
                     Connections[userID].send("DOWNLOAD_COMPLETE|");
-                    console.log("[FFMPEG_MP3] Audio Complete!");
+                    CLog("FFMPEG_MP3", "Audio Complete!");
                 }).on("error", (err) => {
                     FFMPEGErrorHandlers.forEach(handler => handler(userID, err.toString()));
                 });
             }
         }
-        console.log(`[YTDL_CORE] Video ID valid, installing video to ${fullDir}...`);
+        CLog(`YTDL_CORE`, `Video ID valid, installing video to ${fullDir}...`);
         if (!fs.existsSync(parentDir)) {
             try {
                 fs.mkdirSync(parentDir, { recursive: true });
             }
             catch (err) {
-                console.log(`[FS_MKDIR] Error occured while attempting to create directory. ${err}`);
+                CLog(`FS_MKDIR`, `Error occured while attempting to create directory. ${err}`);
                 Connections[userID].send("DOWNLOAD_ERROR|DIRECTORY_ERROR");
                 return;
             }
@@ -121,31 +145,31 @@ const SocketHandlers = {
         if (type == "MP4") {
             ytdl(`http://youtube.com/watch?v=${vid}`, { quality: "highestvideo", filter: (format) => { return format.mimeType.includes("video/mp4") && format.hasVideo; } }).pipe(fs.createWriteStream(`${CurrentDir}/temp/${tempFileName}_V.mp4`)).on('finish', () => {
                 VideoDownloaded = true;
-                console.log("[YTDL_CORE] Video Download Complete!");
+                CLog("YTDL_CORE", "Video Download Complete!");
                 HandleVideo();
             }).on("error", (err) => {
                 if (ErrorOccured)
                     return;
-                console.log(`[YTDL_CORE] Error while downloading video! Name: ${err.name} | Message: ${err.message}`);
+                CLog(`YTDL_CORE`, `Error while downloading video! Name: ${err.name} | Message: ${err.message}`);
                 Connections[userID].send(`DOWNLOAD_ERROR|${err.message.split(":")[0]}|${err.message}`);
                 ErrorOccured = true;
             });
         }
         ytdl(`http://youtube.com/watch?v=${vid}`, { quality: "highestaudio", filter: (format) => { return format.mimeType.includes("video/mp4") && format.hasAudio; } }).pipe(fs.createWriteStream(`${CurrentDir}/temp/${tempFileName}_A.mp4`)).on('finish', () => {
             AudioDownloaded = true;
-            console.log("[YTDL_CORE] Audio Download Complete!");
+            CLog("YTDL_CORE", "Audio Download Complete!");
             HandleVideo();
         }).on("error", (err) => {
             if (ErrorOccured)
                 return;
-            console.log(`[YTDL_CORE] Error while downloading audio! Name: ${err.name} | Message: ${err.message}`);
+            CLog(`YTDL_CORE`, `Error while downloading audio! Name: ${err.name} | Message: ${err.message}`);
             Connections[userID].send(`DOWNLOAD_ERROR|${err.message.split(":")[0]}|${err.message}`);
             ErrorOccured = true;
         });
     },
 };
 YTSocket.on('connection', function (con) {
-    console.log("[ON_CONNECTION] Client Connection Started...");
+    CLog("ON_CONNECTION", "Client Connection Started...");
     con.on("message", (msg) => {
         msg = msg.toString();
         const _Split = msg.split("|");
@@ -172,14 +196,16 @@ app.whenReady().then(() => {
             createWindow();
         }
     });
+    appReady = true;
 });
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
+        YTSocket.close();
         app.quit();
     }
 });
-ipcMain.on('open-url', (_, url) => {
-    shell.openExternal(url);
+Object.entries(IPCHandlers).forEach(handler => {
+    ipcMain.on(handler[0], handler[1]);
 });
-console.log(`[LYT] Listening on port ${PORT}`);
+Log(`Listening on port ${PORT}`);
 //# sourceMappingURL=server.js.map
