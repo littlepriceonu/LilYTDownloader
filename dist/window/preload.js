@@ -10,9 +10,6 @@ function Log(...toLog) {
 }
 var eventSubscriptions = {};
 electron_1.contextBridge.exposeInMainWorld("IPC", {
-    send: (type, data) => {
-        electron_1.ipcRenderer.send(type, data);
-    },
     sendURL: (url) => {
         electron_1.ipcRenderer.send("open-url", url);
     },
@@ -22,7 +19,14 @@ electron_1.contextBridge.exposeInMainWorld("IPC", {
             return;
         }
         eventSubscriptions[event].push(callback);
-    }
+    },
+    invokeInfoRequest: (vid) => {
+        return new Promise(res => {
+            electron_1.ipcRenderer.invoke("get-video-info", vid).then(data => {
+                res(data);
+            });
+        });
+    },
 });
 electron_1.ipcRenderer.on('event-message', (_, message) => {
     Log("Message Recieved!", message);

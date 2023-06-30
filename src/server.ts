@@ -16,6 +16,7 @@ const ipcMain = electron.ipcMain
 const shell = electron.shell
 import ffmpegPath = require("@ffmpeg-installer/ffmpeg")
 import ffmpeg = require('fluent-ffmpeg')
+import { YoutubeDownloadRequest } from './window/window'
 ffmpeg.setFfmpegPath(ffmpegPath.path)
 
 // TODO
@@ -65,6 +66,8 @@ var appReady = false;
 
 const Region = "SERVER"
 
+var Downloads: { [id: string]: YoutubeDownloadRequest } = {};
+
 //#region Functions
 
 function removeLastDirFromString(dir: string[] | string, separator: string) {
@@ -113,24 +116,46 @@ const IPCHandlers = {
     },
 }
 
+const IPCInvokeHandlers = {
+    'get-video-info': async(event: electron.IpcMainEvent, vid: string) => {
+        var VData: ytdl.videoInfo;
+
+        await ytdl.getBasicInfo(`https://youtube.com/watch?v=${vid}`).then(data => {
+            VData = data
+        })
+
+        return VData
+    },
+}
+
 const SocketHandlers = {
     "DEBUG": function (userID: string, msg: string, ..._: string[]) {
         CLog(`CLIENT_${userID}`, `${msg}`)
     },
-    "DOWNLOAD_VIDEO": function (userID: string, vid: string, fileName: string, dir: string, type: string, ..._: string[]) {
+    "DOWNLOAD_VIDEO": function (userID: string, vid: string, fileName: string, dir: string, type: "MP4"|"MP3", ..._: string[]) {
         if (!appReady) {CLog('YTDL_CORE', `Download Requested but App is not loaded!`)}
         if (!ytdl.validateID(vid)) { CLog(`YTDL_CORE`, `Video ID ${vid} is invalid`); return; }
+
+        const DownloadID = randomUUID()
+
 
         const __dir = DirMap[dir]
         const fullDir = __dir + "/" + fileName
 
-        sendMessageToClient("event-message", ["DOWNLOAD_REQUESTED", {
+        var downloadData: YoutubeDownloadRequest = {
+            downloadID: DownloadID,
             vid: vid,
             fileName: fileName,
             dir: __dir,
             fullDir: fullDir,
             type: type,
-        }])
+            hasErrored: false,
+            error: "",
+        }
+
+        Downloads[DownloadID] = downloadData
+
+        sendMessageToClient("event-message", ["DOWNLOAD_REQUESTED", downloadData])
 
         const tempFileName = randomUUID()
 
@@ -283,6 +308,14 @@ app.whenReady().then(() => {
         }
     })
 
+    Object.entries(IPCHandlers).forEach(handler => {
+        ipcMain.on(handler[0], handler[1])
+    })
+
+    Object.entries(IPCInvokeHandlers).forEach(handler => {
+        ipcMain.handle(handler[0], handler[1])
+    })
+
     appReady = true
 })
 
@@ -292,10 +325,6 @@ app.on('window-all-closed', () => {
         YTSocket.close()
         app.quit()
     }
-})
-
-Object.entries(IPCHandlers).forEach(handler => {
-    ipcMain.on(handler[0], handler[1])
 })
 
 Log(`Listening on port ${PORT}`)

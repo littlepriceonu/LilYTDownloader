@@ -22,9 +22,6 @@ function Log(...toLog: any[]) {
 var eventSubscriptions: { [event: string]: Array<Function> } = {}
 
 contextBridge.exposeInMainWorld("IPC", {
-    send: (type: string, data: any)=>{
-        ipcRenderer.send(type, data)
-    },
     sendURL: (url: string) => {
         ipcRenderer.send("open-url", url)
     },
@@ -35,7 +32,14 @@ contextBridge.exposeInMainWorld("IPC", {
         }
         
         eventSubscriptions[event].push(callback)
-    }
+    },
+    invokeInfoRequest: (vid: string) => {
+        return new Promise(res => {
+            ipcRenderer.invoke("get-video-info", vid).then(data => {
+                res(data)
+            })
+        })
+    },
 })
 
 ipcRenderer.on('event-message', (_: IpcRendererEvent, message: ServerEvent) => {

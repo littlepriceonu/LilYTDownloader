@@ -36,6 +36,7 @@ const FFMPEGErrorHandlers = [
 ];
 var appReady = false;
 const Region = "SERVER";
+var Downloads = {};
 function removeLastDirFromString(dir, separator) {
     dir = dir.split(separator);
     dir.pop();
@@ -69,6 +70,15 @@ const IPCHandlers = {
         shell.openExternal(url);
     },
 };
+const IPCInvokeHandlers = {
+    'get-video-info': async (event, vid) => {
+        var VData;
+        await ytdl.getBasicInfo(`https://youtube.com/watch?v=${vid}`).then(data => {
+            VData = data;
+        });
+        return VData;
+    },
+};
 const SocketHandlers = {
     "DEBUG": function (userID, msg, ..._) {
         CLog(`CLIENT_${userID}`, `${msg}`);
@@ -81,15 +91,21 @@ const SocketHandlers = {
             CLog(`YTDL_CORE`, `Video ID ${vid} is invalid`);
             return;
         }
+        const DownloadID = randomUUID();
         const __dir = DirMap[dir];
         const fullDir = __dir + "/" + fileName;
-        sendMessageToClient("event-message", ["DOWNLOAD_REQUESTED", {
-                vid: vid,
-                fileName: fileName,
-                dir: __dir,
-                fullDir: fullDir,
-                type: type,
-            }]);
+        var downloadData = {
+            downloadID: DownloadID,
+            vid: vid,
+            fileName: fileName,
+            dir: __dir,
+            fullDir: fullDir,
+            type: type,
+            hasErrored: false,
+            error: "",
+        };
+        Downloads[DownloadID] = downloadData;
+        sendMessageToClient("event-message", ["DOWNLOAD_REQUESTED", downloadData]);
         const tempFileName = randomUUID();
         var AudioDownloaded = false;
         var VideoDownloaded = false;
@@ -196,6 +212,12 @@ app.whenReady().then(() => {
             createWindow();
         }
     });
+    Object.entries(IPCHandlers).forEach(handler => {
+        ipcMain.on(handler[0], handler[1]);
+    });
+    Object.entries(IPCInvokeHandlers).forEach(handler => {
+        ipcMain.handle(handler[0], handler[1]);
+    });
     appReady = true;
 });
 app.on('window-all-closed', () => {
@@ -203,9 +225,6 @@ app.on('window-all-closed', () => {
         YTSocket.close();
         app.quit();
     }
-});
-Object.entries(IPCHandlers).forEach(handler => {
-    ipcMain.on(handler[0], handler[1]);
 });
 Log(`Listening on port ${PORT}`);
 //# sourceMappingURL=server.js.map
