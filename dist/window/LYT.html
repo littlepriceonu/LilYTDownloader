@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,34 +10,53 @@
     <link rel="stylesheet" href="LYT.css">
     <title>LYT Console</title>
 </head>
-<body class="text-white">
-    <div class="flex flex-row w-full h-full">
-        <div id="SideBar" class="w-[30%] h-full bg-slate-800 flex-col items-center justify-start">
-            <div class="videoDisplay w-full h-20 border-slate-950 border-2 bg-transparent flex flex-col p-2 cursor-pointer mt-2">
-                <div class="flex flex-row">
-                    <img src="https://i.ytimg.com/vi/O-6kbagEmKA/default.jpg" alt="Thumbnail" class="videoThumbnail h-10 mr-2">
-                    <h1 class="videoTitle scrollbar scrollbar-track-slate-900 scrollbar-thumb-slate-950 h-10 text-ellipsis flex justify-center items-start">Automating Youtube Channels With Computer Science</h1>
-                </div>
 
-                <div class="flex flex-row text-sm">
-                    <p class="videoId">ID: O-6kbagEmKA</p>
+<body class="text-white bg-slate-900">
+    <header class="w-full h-[6%] bg-slate-900 drag">
+        <div class="float-right mr-2 h-full flex items-center justify-center space-x-2 no-drag">
+            <img id="MinimizeApp" class="no-drag TitleIcon border border-transparent h-[1.15em] cursor-pointer" src="../../imgs/Minimize.png" alt="Minimize">
+            <img id="MaximizeApp" class="no-drag TitleIcon border border-transparent h-[1.15em] cursor-pointer" src="../../imgs/Maximize.png" alt="Maximize">
+            <img id="CloseApp" class="no-drag TitleIcon border border-transparent h-[1.15em] cursor-pointer" src="../../imgs/Close.png" alt="Close">
+        </div>
+    </header>
+
+    <div class="flex flex-row w-full h-[94%]">
+        <div id="SideBar" class="w-[30%] h-full bg-slate-800 flex-col items-center justify-start SideBarActive relative rounded-tr-lg">
+
+            <div id="Videos" class="w-full h-full absolute -z-10 opacity-0">
+                <div class="videoDisplay w-full h-20 border-slate-950 border-b-2 bg-transparent flex flex-col p-2 cursor-pointer mt-2 absolute">
+                    <div class="flex flex-row">
+                        <img src="" alt="Thumbnail" class="videoThumbnail h-10 mr-2">
+                        <h1 class="videoTitle scrollbar-track-slate-900 scrollbar-thumb-slate-950 scrollbar scrollbar-w-1.5 scrollbar-track-rounded-lg scrollbar-thumb-rounded-lg h-10 text-ellipsis flex justify-center items-start">Loading...</h1>
+                    </div>
+    
+                    <div class="flex flex-row text-sm">
+                        <p class="videoId">ID: Loading...</p>
+                    </div>
                 </div>
             </div>
+            
+            <div id="NothingsHereYet" class="w-full h-full flex flex-col justify-center items-center -z-10 ContentActive text-xs text-gray-500 opacity-0 select-none">
+                <h1 class="text-base">📺</h1>
+                <h1 class="text-base">Nothing Is Here (Yet!)</h1>
+                <p>Try downloading something...</p>
+            </div>
+
         </div>
         <div id="DownloadInfo" class="w-[70%] h-full bg-slate-900 relative">
             <div class="w-full h-full absolute bg-transparent flex flex-col justify-center items-center -z-10 ContentActive">
-                <h1 class="text-3xl">
+                <h1 id="LilYTDownloader" class="text-3xl">
                     LilYTDownloader
                 </h1>
                 <p>Thanks for using LYT 💞</p>
                 <div class="flex flex-row mt-4">
                     <p class="">Made by:</p>
-                    <a class="cursor-pointer ml-2" href="https://littlepriceonu.com"><img src="https://littlepriceonu.com/PFP.gif" alt="Littlepriceonu" class="rounded-full h-6"></a>
+                    <a id="Littlepriceonu" class="cursor-pointer ml-2" href="https://littlepriceonu.com"><img src="https://littlepriceonu.com/PFP.gif" alt="Littlepriceonu" class="rounded-full h-6"></a>
                 </div>
             </div>
             
             <div class="w-full h-full absolute -z-10">
-
+                
             </div>
         </div>
     </div>

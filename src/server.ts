@@ -14,9 +14,11 @@ const app = electron.app
 const BrowserWindow = electron.BrowserWindow
 const ipcMain = electron.ipcMain
 const shell = electron.shell
+const Menu = electron.Menu
+const Tray = electron.Tray
 import ffmpegPath = require("@ffmpeg-installer/ffmpeg")
 import ffmpeg = require('fluent-ffmpeg')
-import { YoutubeDownloadRequest } from './window/window'
+import { IPC, YoutubeDownloadRequest } from './window/window'
 ffmpeg.setFfmpegPath(ffmpegPath.path)
 
 // TODO
@@ -62,11 +64,17 @@ const FFMPEGErrorHandlers = [
     },
 ]
 
+var isMaximized = false;
+
 var appReady = false;
+
+const LYTDir = removeLastDirFromString(__dirname, "\\")
 
 const Region = "SERVER"
 
 var Downloads: { [id: string]: YoutubeDownloadRequest } = {};
+
+var tray: electron.Tray
 
 //#region Functions
 
@@ -89,9 +97,11 @@ function createWindow() {
         height: 600,
         minWidth: 1040,
         minHeight: 600,
+        titleBarStyle: "hidden",
         webPreferences: {
             preload: path.join(__dirname, 'window/preload.js')
-        }
+        },
+        icon: path.join(LYTDir, "/imgs/icon.png"),
     })
 
     // and load the index.html of the app.
@@ -108,11 +118,37 @@ function Log(...toLog: any[]) {
 
 //#endregion
 
+const ContextMenu = electron.Menu.buildFromTemplate([
+    { label: 'Show', click:  function(){
+        mainWindow.show();
+    } },
+    { label: 'Quit', click:  function(){
+        app.quit()
+    } }
+]);
+
 const IPCHandlers = {
     // Open URL in system browser
     'open-url': (_: electron.IpcMainEvent, url: string)=>{
         CLog("OPEN_URL", `Opening URL: ${url}`)
         shell.openExternal(url)
+    },
+    'maximize-clicked': (_: electron.IpcMainEvent)=>{
+        const focused = BrowserWindow.getFocusedWindow()
+        
+        if (!focused.isMaximized()) {
+            focused.maximize()
+        }
+        else {
+            focused.unmaximize()
+        }
+    },
+    'minimize-clicked': (_: electron.IpcMainEvent)=>{
+        const focused = BrowserWindow.getFocusedWindow()
+        focused.minimize()
+    },
+    'close-clicked': (_: electron.IpcMainEvent)=>{
+        mainWindow.hide()
     },
 }
 
@@ -136,7 +172,8 @@ const SocketHandlers = {
         if (!appReady) {CLog('YTDL_CORE', `Download Requested but App is not loaded!`)}
         if (!ytdl.validateID(vid)) { CLog(`YTDL_CORE`, `Video ID ${vid} is invalid`); return; }
 
-        const DownloadID = randomUUID()
+        var DownloadID = randomUUID()
+        DownloadID = <`${string}-${string}-${string}-${string}-${string}`>DownloadID.replace(DownloadID.charAt(0), "LYT")
 
 
         const __dir = DirMap[dir]
@@ -163,11 +200,10 @@ const SocketHandlers = {
         var VideoDownloaded = false;
         var ErrorOccured = false;
 
-        const CurrentDir = removeLastDirFromString(__dirname, "\\")
         const parentDir = __dir + "/" + removeLastDirFromString(fileName, "/")
 
-        if (!fs.existsSync(`${CurrentDir}/temp`)) {
-            fs.mkdirSync(`${CurrentDir}/temp`, { recursive: true })
+        if (!fs.existsSync(`${LYTDir}/temp`)) {
+            fs.mkdirSync(`${LYTDir}/temp`, { recursive: true })
         }
 
         function HandleVideo() {
@@ -178,15 +214,15 @@ const SocketHandlers = {
             if (type == "MP4") {
                 // https://stackoverflow.com/questions/56734348/how-to-add-audio-to-video-with-node-fluent-ffmpeg
                 ffmpeg()
-                    .addInput(`${CurrentDir}/temp/${tempFileName}_V.mp4`)
-                    .addInput(`${CurrentDir}/temp/${tempFileName}_A.mp4`)
+                    .addInput(`${LYTDir}/temp/${tempFileName}_V.mp4`)
+                    .addInput(`${LYTDir}/temp/${tempFileName}_A.mp4`)
                     // I fucking hate ffmpeg it can suck my fucking balls
                     // https://superuser.com/questions/1584053/in-ffmpeg-why-wont-this-avc-video-convert-to-h264
                     .outputOptions(['-map 0:v', '-map 1:a', '-c:v copy', '-shortest'])
                     .saveToFile(fullDir).on('end', () => {
                         // Delete the 2 temp vids
-                        fs.unlinkSync(`${CurrentDir}/temp/${tempFileName}_V.mp4`)
-                        fs.unlinkSync(`${CurrentDir}/temp/${tempFileName}_A.mp4`)
+                        fs.unlinkSync(`${LYTDir}/temp/${tempFileName}_V.mp4`)
+                        fs.unlinkSync(`${LYTDir}/temp/${tempFileName}_A.mp4`)
 
                         // Let the client know we're done
                         Connections[userID].send("DOWNLOAD_COMPLETE|")
@@ -200,10 +236,10 @@ const SocketHandlers = {
             else {
                 // https://superuser.com/questions/332347/how-can-i-convert-mp4-video-to-mp3-audio-with-ffmpeg
                 ffmpeg()
-                    .addInput(`${CurrentDir}/temp/${tempFileName}_A.mp4`)
+                    .addInput(`${LYTDir}/temp/${tempFileName}_A.mp4`)
                     .saveToFile(fullDir).on('end', () => {
                         // Delete the Audio temp vid
-                        fs.unlinkSync(`${CurrentDir}/temp/${tempFileName}_A.mp4`)
+                        fs.unlinkSync(`${LYTDir}/temp/${tempFileName}_A.mp4`)
 
                         // Let the client know we're done
                         Connections[userID].send("DOWNLOAD_COMPLETE|")
@@ -231,7 +267,7 @@ const SocketHandlers = {
 
         // Download Video
         if (type == "MP4") {
-            ytdl(`http://youtube.com/watch?v=${vid}`, { quality: "highestvideo", filter: (format) => { return format.mimeType.includes("video/mp4") && format.hasVideo } }).pipe(fs.createWriteStream(`${CurrentDir}/temp/${tempFileName}_V.mp4`)).on('finish', () => {
+            ytdl(`http://youtube.com/watch?v=${vid}`, { quality: "highestvideo", filter: (format) => { return format.mimeType.includes("video/mp4") && format.hasVideo } }).pipe(fs.createWriteStream(`${LYTDir}/temp/${tempFileName}_V.mp4`)).on('finish', () => {
                 VideoDownloaded = true
 
                 CLog("YTDL_CORE", "Video Download Complete!")
@@ -248,7 +284,7 @@ const SocketHandlers = {
         }
 
         // Download Audio
-        ytdl(`http://youtube.com/watch?v=${vid}`, { quality: "highestaudio", filter: (format) => { return format.mimeType.includes("video/mp4") && format.hasAudio } }).pipe(fs.createWriteStream(`${CurrentDir}/temp/${tempFileName}_A.mp4`)).on('finish', () => {
+        ytdl(`http://youtube.com/watch?v=${vid}`, { quality: "highestaudio", filter: (format) => { return format.mimeType.includes("video/mp4") && format.hasAudio } }).pipe(fs.createWriteStream(`${LYTDir}/temp/${tempFileName}_A.mp4`)).on('finish', () => {
             AudioDownloaded = true
 
             CLog("YTDL_CORE", "Audio Download Complete!")
@@ -315,6 +351,9 @@ app.whenReady().then(() => {
     Object.entries(IPCInvokeHandlers).forEach(handler => {
         ipcMain.handle(handler[0], handler[1])
     })
+
+    const tray = new Tray(electron.nativeImage.createFromPath(path.join(LYTDir, "imgs/icon.png")))
+    tray.setContextMenu(ContextMenu)
 
     appReady = true
 })

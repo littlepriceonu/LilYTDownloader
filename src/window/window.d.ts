@@ -7,6 +7,7 @@ declare global {
 }
 
 export interface IPC {
+    sendTitleBarEvent(type: "MAXIMIZE"|"MINIMIZE"|"CLOSE"): undefined,
     invokeInfoRequest(vid: string): Promise<ytdl.videoInfo>,
     sendURL(url: string): undefined,
     subscribeToEvent(event: string, callback: Function): undefined,

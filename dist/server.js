@@ -12,6 +12,8 @@ const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
 const ipcMain = electron.ipcMain;
 const shell = electron.shell;
+const Menu = electron.Menu;
+const Tray = electron.Tray;
 const ffmpegPath = require("@ffmpeg-installer/ffmpeg");
 const ffmpeg = require("fluent-ffmpeg");
 ffmpeg.setFfmpegPath(ffmpegPath.path);
@@ -34,9 +36,12 @@ const FFMPEGErrorHandlers = [
         }
     },
 ];
+var isMaximized = false;
 var appReady = false;
+const LYTDir = removeLastDirFromString(__dirname, "\\");
 const Region = "SERVER";
 var Downloads = {};
+var tray;
 function removeLastDirFromString(dir, separator) {
     dir = dir.split(separator);
     dir.pop();
@@ -52,9 +57,11 @@ function createWindow() {
         height: 600,
         minWidth: 1040,
         minHeight: 600,
+        titleBarStyle: "hidden",
         webPreferences: {
             preload: path.join(__dirname, 'window/preload.js')
-        }
+        },
+        icon: path.join(LYTDir, "/imgs/icon.png"),
     });
     mainWindow.loadFile('./dist/window/LYT.html');
 }
@@ -64,10 +71,34 @@ function CLog(type, ...toLog) {
 function Log(...toLog) {
     console.log(`[${Region}]`, ...toLog);
 }
+const ContextMenu = electron.Menu.buildFromTemplate([
+    { label: 'Show', click: function () {
+            mainWindow.show();
+        } },
+    { label: 'Quit', click: function () {
+            app.quit();
+        } }
+]);
 const IPCHandlers = {
     'open-url': (_, url) => {
         CLog("OPEN_URL", `Opening URL: ${url}`);
         shell.openExternal(url);
+    },
+    'maximize-clicked': (_) => {
+        const focused = BrowserWindow.getFocusedWindow();
+        if (!focused.isMaximized()) {
+            focused.maximize();
+        }
+        else {
+            focused.unmaximize();
+        }
+    },
+    'minimize-clicked': (_) => {
+        const focused = BrowserWindow.getFocusedWindow();
+        focused.minimize();
+    },
+    'close-clicked': (_) => {
+        mainWindow.hide();
     },
 };
 const IPCInvokeHandlers = {
@@ -91,7 +122,8 @@ const SocketHandlers = {
             CLog(`YTDL_CORE`, `Video ID ${vid} is invalid`);
             return;
         }
-        const DownloadID = randomUUID();
+        var DownloadID = randomUUID();
+        DownloadID = DownloadID.replace(DownloadID.charAt(0), "LYT");
         const __dir = DirMap[dir];
         const fullDir = __dir + "/" + fileName;
         var downloadData = {
@@ -110,10 +142,9 @@ const SocketHandlers = {
         var AudioDownloaded = false;
         var VideoDownloaded = false;
         var ErrorOccured = false;
-        const CurrentDir = removeLastDirFromString(__dirname, "\\");
         const parentDir = __dir + "/" + removeLastDirFromString(fileName, "/");
-        if (!fs.existsSync(`${CurrentDir}/temp`)) {
-            fs.mkdirSync(`${CurrentDir}/temp`, { recursive: true });
+        if (!fs.existsSync(`${LYTDir}/temp`)) {
+            fs.mkdirSync(`${LYTDir}/temp`, { recursive: true });
         }
         function HandleVideo() {
             if (ErrorOccured)
@@ -123,12 +154,12 @@ const SocketHandlers = {
                     return;
             if (type == "MP4") {
                 ffmpeg()
-                    .addInput(`${CurrentDir}/temp/${tempFileName}_V.mp4`)
-                    .addInput(`${CurrentDir}/temp/${tempFileName}_A.mp4`)
+                    .addInput(`${LYTDir}/temp/${tempFileName}_V.mp4`)
+                    .addInput(`${LYTDir}/temp/${tempFileName}_A.mp4`)
                     .outputOptions(['-map 0:v', '-map 1:a', '-c:v copy', '-shortest'])
                     .saveToFile(fullDir).on('end', () => {
-                    fs.unlinkSync(`${CurrentDir}/temp/${tempFileName}_V.mp4`);
-                    fs.unlinkSync(`${CurrentDir}/temp/${tempFileName}_A.mp4`);
+                    fs.unlinkSync(`${LYTDir}/temp/${tempFileName}_V.mp4`);
+                    fs.unlinkSync(`${LYTDir}/temp/${tempFileName}_A.mp4`);
                     Connections[userID].send("DOWNLOAD_COMPLETE|");
                     CLog("FFMPEG_MP4", "Video Complete!");
                 }).on("error", (err) => {
@@ -137,9 +168,9 @@ const SocketHandlers = {
             }
             else {
                 ffmpeg()
-                    .addInput(`${CurrentDir}/temp/${tempFileName}_A.mp4`)
+                    .addInput(`${LYTDir}/temp/${tempFileName}_A.mp4`)
                     .saveToFile(fullDir).on('end', () => {
-                    fs.unlinkSync(`${CurrentDir}/temp/${tempFileName}_A.mp4`);
+                    fs.unlinkSync(`${LYTDir}/temp/${tempFileName}_A.mp4`);
                     Connections[userID].send("DOWNLOAD_COMPLETE|");
                     CLog("FFMPEG_MP3", "Audio Complete!");
                 }).on("error", (err) => {
@@ -159,7 +190,7 @@ const SocketHandlers = {
             }
         }
         if (type == "MP4") {
-            ytdl(`http://youtube.com/watch?v=${vid}`, { quality: "highestvideo", filter: (format) => { return format.mimeType.includes("video/mp4") && format.hasVideo; } }).pipe(fs.createWriteStream(`${CurrentDir}/temp/${tempFileName}_V.mp4`)).on('finish', () => {
+            ytdl(`http://youtube.com/watch?v=${vid}`, { quality: "highestvideo", filter: (format) => { return format.mimeType.includes("video/mp4") && format.hasVideo; } }).pipe(fs.createWriteStream(`${LYTDir}/temp/${tempFileName}_V.mp4`)).on('finish', () => {
                 VideoDownloaded = true;
                 CLog("YTDL_CORE", "Video Download Complete!");
                 HandleVideo();
@@ -171,7 +202,7 @@ const SocketHandlers = {
                 ErrorOccured = true;
             });
         }
-        ytdl(`http://youtube.com/watch?v=${vid}`, { quality: "highestaudio", filter: (format) => { return format.mimeType.includes("video/mp4") && format.hasAudio; } }).pipe(fs.createWriteStream(`${CurrentDir}/temp/${tempFileName}_A.mp4`)).on('finish', () => {
+        ytdl(`http://youtube.com/watch?v=${vid}`, { quality: "highestaudio", filter: (format) => { return format.mimeType.includes("video/mp4") && format.hasAudio; } }).pipe(fs.createWriteStream(`${LYTDir}/temp/${tempFileName}_A.mp4`)).on('finish', () => {
             AudioDownloaded = true;
             CLog("YTDL_CORE", "Audio Download Complete!");
             HandleVideo();
@@ -218,6 +249,8 @@ app.whenReady().then(() => {
     Object.entries(IPCInvokeHandlers).forEach(handler => {
         ipcMain.handle(handler[0], handler[1]);
     });
+    const tray = new Tray(electron.nativeImage.createFromPath(path.join(LYTDir, "imgs/icon.png")));
+    tray.setContextMenu(ContextMenu);
     appReady = true;
 });
 app.on('window-all-closed', () => {

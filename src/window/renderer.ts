@@ -18,6 +18,14 @@ const ErrorMap = {
 
 var Downloads: { [id: string]: YoutubeDownloadData } = {}
 
+const Videos = <HTMLDivElement>document.getElementById("Videos");
+const NothingsHereYet = <HTMLDivElement>document.getElementById("NothingsHereYet");
+const LilYTDownloaderText = <HTMLHeadingElement>document.getElementById("LilYTDownloader")
+
+const CloseApp = document.getElementById("CloseApp")
+const MaximizeApp = document.getElementById("MaximizeApp")
+const MinimizeApp = document.getElementById("MinimizeApp")
+
 //#region Functions
 
 function CLog_(type: string, ...toLog:any[]) {
@@ -28,42 +36,76 @@ function Log_(...toLog: any[]) {
     console.log(`[${_Region}]`, ...toLog)
 }
 
-//! work on this, idk why its error about the selectors 
 function addVideoToSidebar(data: YoutubeDownloadData) {
     var newVideoDisplay = videoDisplay.cloneNode(true) as HTMLDivElement
     newVideoDisplay.id = data.downloadID
 
-    SideBar.prepend(newVideoDisplay)
+    Videos.prepend(newVideoDisplay)
+    
+    CLog_("SIDEBAR", `#${data.downloadID} > div > .videoThumbnail`)
 
-    var thumbnail = document.querySelector(`${data.downloadID} > div > .videoThumbnail`) as HTMLImageElement
+    var thumbnail = document.querySelector(`#${data.downloadID} > div > .videoThumbnail`) as HTMLImageElement
     thumbnail.src = ThumbNailString.replace("[ID]", data.vid)
 
-    var title = document.querySelector(`${data.downloadID} > div > .videoTitle`) as HTMLHeadingElement
-    var videoID = document.querySelector(`${data.downloadID} > div > .videoId`) as HTMLParagraphElement
+    var title = document.querySelector(`#${data.downloadID} > div > .videoTitle`) as HTMLHeadingElement
+    var videoID = document.querySelector(`#${data.downloadID} > div > .videoId`) as HTMLParagraphElement
 
     videoID.innerText = data.vid
     
     window.IPC.invokeInfoRequest(data.vid).then( videoData => {
         CLog_("INVOKE_INFO_REQUEST", videoData)
-        videoData = videoData as any
-        title.innerText = (videoData as any).title
-    })
 
-    document.querySelector(`${data.downloadID} > div > .videoTitle`)
+        title.innerText = videoData.videoDetails.title
+    })
 }
 
 //#endregion
 
 //#region Misc
 
+var access = 0
+var granted = false
+
 Array.from(document.getElementsByTagName("a")).forEach((el: HTMLAnchorElement) => {
     el.onclick = (e) => {
+        const isMe = el.id == "Littlepriceonu"
+
+        if (isMe) {
+            access += 1
+
+            if (access == 3) granted = true
+            else granted = false
+        }
+
         if (!el.href) return
 
-        e.preventDefault()
-        window.IPC.sendURL(el.href)
+        if (!granted) {
+            e.preventDefault()
+            window.IPC.sendURL(el.href)
+        }
+        else if (granted && isMe) {
+            e.preventDefault()
+            LilYTDownloaderText.innerText = "[ACCESS GRANTED]"
+            LilYTDownloaderText.classList.add("ACCESS_GRANTED")
+        }
     }
 })
+
+//#endregion
+
+//#region Title Bar
+
+MaximizeApp.onclick = () => {
+    window.IPC.sendTitleBarEvent("MAXIMIZE")
+}
+
+MinimizeApp.onclick = () => {
+    window.IPC.sendTitleBarEvent("MINIMIZE")
+}
+
+CloseApp.onclick = () => {
+    window.IPC.sendTitleBarEvent("CLOSE")
+}
 
 //#endregion
 
@@ -73,6 +115,9 @@ window.IPC.subscribeToEvent("DOWNLOAD_REQUESTED", (data: YoutubeDownloadData) =>
     Downloads[data.downloadID] = data
 
     addVideoToSidebar(data)
+
+    NothingsHereYet.classList.remove("ContentActive")
+    Videos.classList.add("ContentActive")
 })
 
 //#endregion

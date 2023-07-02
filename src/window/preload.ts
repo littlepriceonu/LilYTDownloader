@@ -1,5 +1,5 @@
 import { IpcRendererEvent } from "electron"
-import { ServerEvent, YoutubeDownloadRequest } from "./window"
+import { IPC, ServerEvent, YoutubeDownloadRequest } from "./window"
 
 import { contextBridge, ipcRenderer } from 'electron'
 
@@ -21,7 +21,17 @@ function Log(...toLog: any[]) {
 
 var eventSubscriptions: { [event: string]: Array<Function> } = {}
 
-contextBridge.exposeInMainWorld("IPC", {
+const TitleBarEventMap = {
+    "MAXIMIZE": "maximize-clicked",
+    "MINIMIZE": "minimize-clicked",
+    "CLOSE": "close-clicked",
+}
+
+const ExposedIPC: IPC = {
+    sendTitleBarEvent: (type: "MAXIMIZE"|"MINIMIZE"|"CLOSE") => {
+        CLog("SEND_TITLE_BAR_EVENT", type, TitleBarEventMap[type])
+        ipcRenderer.send(TitleBarEventMap[type])
+    },
     sendURL: (url: string) => {
         ipcRenderer.send("open-url", url)
     },
@@ -40,7 +50,9 @@ contextBridge.exposeInMainWorld("IPC", {
             })
         })
     },
-})
+}
+
+contextBridge.exposeInMainWorld("IPC", ExposedIPC)
 
 ipcRenderer.on('event-message', (_: IpcRendererEvent, message: ServerEvent) => {
     Log("Message Recieved!", message)

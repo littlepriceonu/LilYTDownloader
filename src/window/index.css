@@ -4,14 +4,29 @@
 
 html, body {width: 100%; height: 100%; margin: 0;}
 
-div.ContentActive {
-    z-index: 1;
+.drag {
+    -webkit-app-region: drag;
 }
 
-.videoDescription {
+.no-drag {
+    -webkit-app-region: no-drag;
+}
+
+div.ContentActive {
+    z-index: 1;
+    opacity: 1;
+}
+
+.videoTitle {
     overflow: overlay;
 }
 
 #SideBar > div:nth-child(1) {
     margin-top: 0;
+}
+
+h1.ACCESS_GRANTED {
+    color: rgb(34 197 94) !important;
+    filter:drop-shadow(0 0 15px green) !important;
+    font-weight: 750;
 }

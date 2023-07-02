@@ -9,7 +9,16 @@ function Log(...toLog) {
     console.log(`[${Region}]`, ...toLog);
 }
 var eventSubscriptions = {};
-electron_1.contextBridge.exposeInMainWorld("IPC", {
+const TitleBarEventMap = {
+    "MAXIMIZE": "maximize-clicked",
+    "MINIMIZE": "minimize-clicked",
+    "CLOSE": "close-clicked",
+};
+const ExposedIPC = {
+    sendTitleBarEvent: (type) => {
+        CLog("SEND_TITLE_BAR_EVENT", type, TitleBarEventMap[type]);
+        electron_1.ipcRenderer.send(TitleBarEventMap[type]);
+    },
     sendURL: (url) => {
         electron_1.ipcRenderer.send("open-url", url);
     },
@@ -27,7 +36,8 @@ electron_1.contextBridge.exposeInMainWorld("IPC", {
             });
         });
     },
-});
+};
+electron_1.contextBridge.exposeInMainWorld("IPC", ExposedIPC);
 electron_1.ipcRenderer.on('event-message', (_, message) => {
     Log("Message Recieved!", message);
     if (!eventSubscriptions[message[0]])
