@@ -7,8 +7,6 @@ videoDisplay.remove()
 
 const ThumbNailString = "https://i.ytimg.com/vi/[ID]/default.jpg"
 
-const SideBar = document.getElementById("SideBar")
-
 const ErrorMap = {
     "EPREM": "No Permission To Create This File!",
     "EISDIR": "File Name Invalid!",
@@ -25,6 +23,19 @@ const LilYTDownloaderText = <HTMLHeadingElement>document.getElementById("LilYTDo
 const CloseApp = document.getElementById("CloseApp")
 const MaximizeApp = document.getElementById("MaximizeApp")
 const MinimizeApp = document.getElementById("MinimizeApp")
+
+const SettingsButton = document.getElementById("SettingsButton")
+
+SettingsButton.onclick = () => {
+    if (SettingsButton.style.rotate == "90deg") {
+        // close settings
+        SettingsButton.style.rotate = "0deg"
+    }
+    else {
+        // open settings
+        SettingsButton.style.rotate = "90deg"
+    }
+}
 
 //#region Functions
 

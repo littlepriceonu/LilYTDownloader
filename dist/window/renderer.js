@@ -4,7 +4,6 @@ const _Region = "RENDERER";
 const videoDisplay = document.getElementsByClassName('videoDisplay').item(0);
 videoDisplay.remove();
 const ThumbNailString = "https://i.ytimg.com/vi/[ID]/default.jpg";
-const SideBar = document.getElementById("SideBar");
 const ErrorMap = {
     "EPREM": "No Permission To Create This File!",
     "EISDIR": "File Name Invalid!",
@@ -18,6 +17,15 @@ const LilYTDownloaderText = document.getElementById("LilYTDownloader");
 const CloseApp = document.getElementById("CloseApp");
 const MaximizeApp = document.getElementById("MaximizeApp");
 const MinimizeApp = document.getElementById("MinimizeApp");
+const SettingsButton = document.getElementById("SettingsButton");
+SettingsButton.onclick = () => {
+    if (SettingsButton.style.rotate == "90deg") {
+        SettingsButton.style.rotate = "0deg";
+    }
+    else {
+        SettingsButton.style.rotate = "90deg";
+    }
+};
 function CLog_(type, ...toLog) {
     console.log(`[${type}]`, ...toLog);
 }

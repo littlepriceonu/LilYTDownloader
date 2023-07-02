@@ -36,7 +36,6 @@ const FFMPEGErrorHandlers = [
         }
     },
 ];
-var isMaximized = false;
 var appReady = false;
 const LYTDir = removeLastDirFromString(__dirname, "\\");
 const Region = "SERVER";
@@ -249,7 +248,7 @@ app.whenReady().then(() => {
     Object.entries(IPCInvokeHandlers).forEach(handler => {
         ipcMain.handle(handler[0], handler[1]);
     });
-    const tray = new Tray(electron.nativeImage.createFromPath(path.join(LYTDir, "imgs/icon.png")));
+    tray = new Tray(electron.nativeImage.createFromPath(path.join(LYTDir, "imgs/icon.png")));
     tray.setContextMenu(ContextMenu);
     appReady = true;
 });

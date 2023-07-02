@@ -64,8 +64,6 @@ const FFMPEGErrorHandlers = [
     },
 ]
 
-var isMaximized = false;
-
 var appReady = false;
 
 const LYTDir = removeLastDirFromString(__dirname, "\\")
@@ -352,7 +350,7 @@ app.whenReady().then(() => {
         ipcMain.handle(handler[0], handler[1])
     })
 
-    const tray = new Tray(electron.nativeImage.createFromPath(path.join(LYTDir, "imgs/icon.png")))
+    tray = new Tray(electron.nativeImage.createFromPath(path.join(LYTDir, "imgs/icon.png")))
     tray.setContextMenu(ContextMenu)
 
     appReady = true
