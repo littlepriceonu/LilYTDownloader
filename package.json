@@ -20,6 +20,7 @@
   "homepage": "https://github.com/littlepriceonu/LilYTDownloader#readme",
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@vibrant/types": "^3.2.1-alpha.1",
     "electron": "^25.2.0",
     "fluent-ffmpeg": "^2.1.2",
     "nodemon": "^2.0.22",

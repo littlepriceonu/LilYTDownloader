@@ -18,23 +18,25 @@ const Menu = electron.Menu
 const Tray = electron.Tray
 import ffmpegPath = require("@ffmpeg-installer/ffmpeg")
 import ffmpeg = require('fluent-ffmpeg')
-import { IPC, YoutubeDownloadRequest } from './window/window'
+import { IPC, YoutubeDownloadRequest } from './window/LYT'
 ffmpeg.setFfmpegPath(ffmpegPath.path)
 
 // TODO
 // Install entire playlists to a folder
-// Choose between mp4 and mp3
-// Set up a UI for the userscript
 // set up heartbeats on the server & client so I can kill dead client connections
 // 
 // Userscript:
-//  Folder Select 
-//  Name of file
+//  Folder Select (?)
 //  Quality Select
 //
 // Server:
 //  Quality Support
 //  Check if file exists, send message to client warning about overwrite
+//
+// App:
+//  Make video download element look good lmao
+//  Progress on every item
+//  Click to see info about download
 
 const Username = os.userInfo().username
 
@@ -96,6 +98,10 @@ function createWindow() {
         minWidth: 1040,
         minHeight: 600,
         titleBarStyle: "hidden",
+        titleBarOverlay: {
+            color: "#0f172a",
+            symbolColor: "#ffffff"
+        },
         webPreferences: {
             preload: path.join(__dirname, 'window/preload.js')
         },
@@ -116,6 +122,11 @@ function Log(...toLog: any[]) {
 
 //#endregion
 
+// clear everything in the "temp" directory
+fs.readdirSync(path.join(LYTDir, "temp")).forEach(file => {
+    fs.unlinkSync(path.join(LYTDir, `temp/${file}`))
+})
+
 const ContextMenu = electron.Menu.buildFromTemplate([
     { label: 'Show', click:  function(){
         mainWindow.show();
@@ -130,23 +141,6 @@ const IPCHandlers = {
     'open-url': (_: electron.IpcMainEvent, url: string)=>{
         CLog("OPEN_URL", `Opening URL: ${url}`)
         shell.openExternal(url)
-    },
-    'maximize-clicked': (_: electron.IpcMainEvent)=>{
-        const focused = BrowserWindow.getFocusedWindow()
-        
-        if (!focused.isMaximized()) {
-            focused.maximize()
-        }
-        else {
-            focused.unmaximize()
-        }
-    },
-    'minimize-clicked': (_: electron.IpcMainEvent)=>{
-        const focused = BrowserWindow.getFocusedWindow()
-        focused.minimize()
-    },
-    'close-clicked': (_: electron.IpcMainEvent)=>{
-        mainWindow.hide()
     },
 }
 
@@ -334,6 +328,12 @@ YTSocket.on('connection', function (con) {
 
 app.whenReady().then(() => {
     createWindow()
+
+    mainWindow.on("close", (e) => {
+        e.preventDefault()
+
+        mainWindow.hide()
+    })
 
     // MacOS stuff
     app.on('activate', () => {

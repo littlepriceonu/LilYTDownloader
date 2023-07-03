@@ -57,6 +57,10 @@ function createWindow() {
         minWidth: 1040,
         minHeight: 600,
         titleBarStyle: "hidden",
+        titleBarOverlay: {
+            color: "#0f172a",
+            symbolColor: "#ffffff"
+        },
         webPreferences: {
             preload: path.join(__dirname, 'window/preload.js')
         },
@@ -70,6 +74,9 @@ function CLog(type, ...toLog) {
 function Log(...toLog) {
     console.log(`[${Region}]`, ...toLog);
 }
+fs.readdirSync(path.join(LYTDir, "temp")).forEach(file => {
+    fs.unlinkSync(path.join(LYTDir, `temp/${file}`));
+});
 const ContextMenu = electron.Menu.buildFromTemplate([
     { label: 'Show', click: function () {
             mainWindow.show();
@@ -82,22 +89,6 @@ const IPCHandlers = {
     'open-url': (_, url) => {
         CLog("OPEN_URL", `Opening URL: ${url}`);
         shell.openExternal(url);
-    },
-    'maximize-clicked': (_) => {
-        const focused = BrowserWindow.getFocusedWindow();
-        if (!focused.isMaximized()) {
-            focused.maximize();
-        }
-        else {
-            focused.unmaximize();
-        }
-    },
-    'minimize-clicked': (_) => {
-        const focused = BrowserWindow.getFocusedWindow();
-        focused.minimize();
-    },
-    'close-clicked': (_) => {
-        mainWindow.hide();
     },
 };
 const IPCInvokeHandlers = {
@@ -237,6 +228,10 @@ YTSocket.on('connection', function (con) {
 });
 app.whenReady().then(() => {
     createWindow();
+    mainWindow.on("close", (e) => {
+        e.preventDefault();
+        mainWindow.hide();
+    });
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
             createWindow();

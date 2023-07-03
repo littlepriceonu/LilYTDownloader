@@ -3,6 +3,10 @@ module.exports = {
     content: ["./src/**/*.{html,js}", "./dist/window/**/*.{html,js}"],
     theme: {
       extend: {
+        fontFamily: {
+          "roboto": "'Roboto', sans-serif"
+        },
+
         keyframes: {
           scrollingGradientframes: {
             '0%': { backgroundPosition: '0% 50%' },

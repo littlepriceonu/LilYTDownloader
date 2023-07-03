@@ -1,5 +1,5 @@
 import { IpcRendererEvent } from "electron"
-import { IPC, ServerEvent, YoutubeDownloadRequest } from "./window"
+import { IPC, ServerEvent, YoutubeDownloadRequest } from "./LYT"
 
 import { contextBridge, ipcRenderer } from 'electron'
 
@@ -32,7 +32,7 @@ const ExposedIPC: IPC = {
         CLog("SEND_TITLE_BAR_EVENT", type, TitleBarEventMap[type])
         ipcRenderer.send(TitleBarEventMap[type])
     },
-    sendURL: (url: string) => {
+    openURL: (url: string) => {
         ipcRenderer.send("open-url", url)
     },
     subscribeToEvent: (event: string, callback: Function) => {

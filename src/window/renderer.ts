@@ -1,4 +1,4 @@
-import { YoutubeDownloadRequest as YoutubeDownloadData } from "./window"
+import { YoutubeDownloadRequest as YoutubeDownloadData } from "./LYT"
 
 const _Region = "RENDERER"
 
@@ -19,23 +19,6 @@ var Downloads: { [id: string]: YoutubeDownloadData } = {}
 const Videos = <HTMLDivElement>document.getElementById("Videos");
 const NothingsHereYet = <HTMLDivElement>document.getElementById("NothingsHereYet");
 const LilYTDownloaderText = <HTMLHeadingElement>document.getElementById("LilYTDownloader")
-
-const CloseApp = document.getElementById("CloseApp")
-const MaximizeApp = document.getElementById("MaximizeApp")
-const MinimizeApp = document.getElementById("MinimizeApp")
-
-const SettingsButton = document.getElementById("SettingsButton")
-
-SettingsButton.onclick = () => {
-    if (SettingsButton.style.rotate == "90deg") {
-        // close settings
-        SettingsButton.style.rotate = "0deg"
-    }
-    else {
-        // open settings
-        SettingsButton.style.rotate = "90deg"
-    }
-}
 
 //#region Functions
 
@@ -59,9 +42,23 @@ function addVideoToSidebar(data: YoutubeDownloadData) {
     thumbnail.src = ThumbNailString.replace("[ID]", data.vid)
 
     var title = document.querySelector(`#${data.downloadID} > div > .videoTitle`) as HTMLHeadingElement
-    var videoID = document.querySelector(`#${data.downloadID} > div > .videoId`) as HTMLParagraphElement
 
-    videoID.innerText = data.vid
+    //videoID.innerText = data.vid
+    window.Vibrant.from(thumbnail.src).quality(1).clearFilters().getPalette().then((palette: any) => {
+        const StartingRGB = palette.Vibrant.rgb;
+        const StartingColor = `rgba(${StartingRGB[0].toString()}, ${StartingRGB[1].toString()}, ${StartingRGB[2].toString()}, 0.7)`;
+        
+        const EndingRGB = palette.LightVibrant.rgb;
+        const EndingColor = `rgba(${EndingRGB[0].toString()}, ${EndingRGB[1].toString()}, ${EndingRGB[2].toString()}, 0.55)`;
+        
+
+        //newVideoDisplay.style.setProperty("--gradient-from", StartingColor)
+        //newVideoDisplay.style.setProperty("--gradient-to", EndingColor)
+
+
+        CLog_("VIBRANT", palette)
+    });
+
     
     window.IPC.invokeInfoRequest(data.vid).then( videoData => {
         CLog_("INVOKE_INFO_REQUEST", videoData)
@@ -92,7 +89,7 @@ Array.from(document.getElementsByTagName("a")).forEach((el: HTMLAnchorElement) =
 
         if (!granted) {
             e.preventDefault()
-            window.IPC.sendURL(el.href)
+            window.IPC.openURL(el.href)
         }
         else if (granted && isMe) {
             e.preventDefault()
@@ -101,22 +98,6 @@ Array.from(document.getElementsByTagName("a")).forEach((el: HTMLAnchorElement) =
         }
     }
 })
-
-//#endregion
-
-//#region Title Bar
-
-MaximizeApp.onclick = () => {
-    window.IPC.sendTitleBarEvent("MAXIMIZE")
-}
-
-MinimizeApp.onclick = () => {
-    window.IPC.sendTitleBarEvent("MINIMIZE")
-}
-
-CloseApp.onclick = () => {
-    window.IPC.sendTitleBarEvent("CLOSE")
-}
 
 //#endregion
 

@@ -3,13 +3,14 @@ import ytdl = require("ytdl-core");
 declare global {
     interface Window {
         IPC: IPC;
+        Vibrant: any;
     }
 }
 
 export interface IPC {
     sendTitleBarEvent(type: "MAXIMIZE"|"MINIMIZE"|"CLOSE"): undefined,
     invokeInfoRequest(vid: string): Promise<ytdl.videoInfo>,
-    sendURL(url: string): undefined,
+    openURL(url: string): undefined,
     subscribeToEvent(event: string, callback: Function): undefined,
 }
 

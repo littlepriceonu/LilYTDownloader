@@ -19,7 +19,7 @@ const ExposedIPC = {
         CLog("SEND_TITLE_BAR_EVENT", type, TitleBarEventMap[type]);
         electron_1.ipcRenderer.send(TitleBarEventMap[type]);
     },
-    sendURL: (url) => {
+    openURL: (url) => {
         electron_1.ipcRenderer.send("open-url", url);
     },
     subscribeToEvent: (event, callback) => {

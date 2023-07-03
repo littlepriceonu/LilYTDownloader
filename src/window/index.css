@@ -2,6 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
+@property --gradient-from {
+    syntax: "<color>";
+    initial-value: #123c70;
+    inherits: false;
+}
+
+@property --gradient-to {
+    syntax: "<color>";
+    initial-value: #59a3ff;
+    inherits: false;
+}
+
+@property --gradient-angle {
+    syntax: "<angle>";
+    initial-value: 45deg;
+    inherits: false;
+}
+
+@keyframes gradientDirection {
+    0% {
+        --gradient-angle: 45deg
+    }
+
+    50% {
+        --gradient-angle: 315deg;
+    }
+
+    100% {
+        --gradient-angle: 44deg
+    }
+}
+
+:root {
+    --gradient-from: red;
+    --gradient-to: blue;
+}
+
 html, body {width: 100%; height: 100%; margin: 0;}
 
 .drag {
@@ -18,15 +55,25 @@ div.ContentActive {
 }
 
 .videoTitle {
-    overflow: overlay;
+    line-height: 1em;
 }
 
-#SideBar > div:nth-child(1) {
-    margin-top: 0;
+#Videos > div:nth-child(1) {
+    margin-top: .25em;
 }
 
 h1.ACCESS_GRANTED {
     color: rgb(34 197 94) !important;
     filter:drop-shadow(0 0 15px green) !important;
     font-weight: 750;
+}
+
+.videoDisplay {
+    animation: gradientDirection 60s infinite;
+    background-image: linear-gradient(var(--gradient-angle), var(--gradient-from), var(--gradient-to));
+}
+
+#CloseApp:hover {
+    filter: invert(30%) sepia(100%) saturate(7462%) hue-rotate(1deg) brightness(100%) contrast(106%);
+    transform: scale(1.2);
 }

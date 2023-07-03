@@ -14,18 +14,6 @@ var Downloads = {};
 const Videos = document.getElementById("Videos");
 const NothingsHereYet = document.getElementById("NothingsHereYet");
 const LilYTDownloaderText = document.getElementById("LilYTDownloader");
-const CloseApp = document.getElementById("CloseApp");
-const MaximizeApp = document.getElementById("MaximizeApp");
-const MinimizeApp = document.getElementById("MinimizeApp");
-const SettingsButton = document.getElementById("SettingsButton");
-SettingsButton.onclick = () => {
-    if (SettingsButton.style.rotate == "90deg") {
-        SettingsButton.style.rotate = "0deg";
-    }
-    else {
-        SettingsButton.style.rotate = "90deg";
-    }
-};
 function CLog_(type, ...toLog) {
     console.log(`[${type}]`, ...toLog);
 }
@@ -40,8 +28,13 @@ function addVideoToSidebar(data) {
     var thumbnail = document.querySelector(`#${data.downloadID} > div > .videoThumbnail`);
     thumbnail.src = ThumbNailString.replace("[ID]", data.vid);
     var title = document.querySelector(`#${data.downloadID} > div > .videoTitle`);
-    var videoID = document.querySelector(`#${data.downloadID} > div > .videoId`);
-    videoID.innerText = data.vid;
+    window.Vibrant.from(thumbnail.src).quality(1).clearFilters().getPalette().then((palette) => {
+        const StartingRGB = palette.Vibrant.rgb;
+        const StartingColor = `rgba(${StartingRGB[0].toString()}, ${StartingRGB[1].toString()}, ${StartingRGB[2].toString()}, 0.7)`;
+        const EndingRGB = palette.LightVibrant.rgb;
+        const EndingColor = `rgba(${EndingRGB[0].toString()}, ${EndingRGB[1].toString()}, ${EndingRGB[2].toString()}, 0.55)`;
+        CLog_("VIBRANT", palette);
+    });
     window.IPC.invokeInfoRequest(data.vid).then(videoData => {
         CLog_("INVOKE_INFO_REQUEST", videoData);
         title.innerText = videoData.videoDetails.title;
@@ -63,7 +56,7 @@ Array.from(document.getElementsByTagName("a")).forEach((el) => {
             return;
         if (!granted) {
             e.preventDefault();
-            window.IPC.sendURL(el.href);
+            window.IPC.openURL(el.href);
         }
         else if (granted && isMe) {
             e.preventDefault();
@@ -72,15 +65,6 @@ Array.from(document.getElementsByTagName("a")).forEach((el) => {
         }
     };
 });
-MaximizeApp.onclick = () => {
-    window.IPC.sendTitleBarEvent("MAXIMIZE");
-};
-MinimizeApp.onclick = () => {
-    window.IPC.sendTitleBarEvent("MINIMIZE");
-};
-CloseApp.onclick = () => {
-    window.IPC.sendTitleBarEvent("CLOSE");
-};
 window.IPC.subscribeToEvent("DOWNLOAD_REQUESTED", (data) => {
     Downloads[data.downloadID] = data;
     addVideoToSidebar(data);

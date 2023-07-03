@@ -4,43 +4,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <!-- Stupid Hack for typescipt being stupid -->
     <script defer> var exports = {}; </script>
+
     <script defer src="renderer.js"></script>
+
     <link rel="stylesheet" href="LYT.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+
+    <script src="https://unpkg.com/node-vibrant@3.1.5/dist/vibrant.min.js"></script>
     <title>LYT Console</title>
 </head>
 
 <body class="text-white bg-slate-900">
-    <header class="w-full h-[6%] bg-slate-900 drag">
-        <div class="float-left ml-2 h-full flex items-center justify-center space-x-2 no-drag">
-            <img id="SettingsButton" class="transition-all duration-500 ease-in-out no-drag TitleIcon border border-transparent h-[1.62em] cursor-pointer" src="../../imgs/Settings.png" alt="Minimize">
-        </div>
-
-        <div class="float-right mr-2 h-full flex items-center justify-center space-x-2 no-drag">
-            <img id="MinimizeApp" class="no-drag TitleIcon border border-transparent h-[1.15em] cursor-pointer" src="../../imgs/Minimize.png" alt="Minimize">
-            <img id="MaximizeApp" class="no-drag TitleIcon border border-transparent h-[1.15em] cursor-pointer" src="../../imgs/Maximize.png" alt="Maximize">
-            <img id="CloseApp" class="no-drag TitleIcon border border-transparent h-[1.15em] cursor-pointer" src="../../imgs/Close.png" alt="Close">
-        </div>
+    <header class="w-full h-[6%] bg-slate-900 drag absolute z-20 bg-transparent">
     </header>
 
-    <div class="flex flex-row w-full h-[94%]">
+    <div class="flex flex-row w-full h-full">
         <div id="SideBar" class="w-[30%] h-full bg-slate-800 flex-col items-center justify-start SideBarActive relative rounded-tr-lg">
 
-            <div id="Videos" class="w-full h-full absolute -z-10 opacity-0">
-                <div class="videoDisplay w-full h-20 border-slate-950 border-b-2 bg-transparent flex flex-col p-2 cursor-pointer mt-2 absolute">
+            <div class="w-full h-[6%] bg-[rgba(255,255,255,0.05)] rounded-tr-lg flex justify-start items-center">
+                <h1 class="ml-2 font-semibold">Downloads</h1>
+            </div>
+
+            <div id="Videos" class="w-full h-[94%] absolute -z-10 opacity-0 flex flex-col items-center justify-start space-y-1">
+                <div class="videoDisplay w-[calc(100%_-_1em)] h-14 bg-transparent flex flex-col p-2 cursor-pointer bg-teal-950 rounded-md">
                     <div class="flex flex-row">
-                        <img src="" alt="Thumbnail" class="videoThumbnail h-10 mr-2">
-                        <h1 class="videoTitle scrollbar-track-slate-900 scrollbar-thumb-slate-950 scrollbar scrollbar-w-1.5 scrollbar-track-rounded-lg scrollbar-thumb-rounded-lg h-10 text-ellipsis flex justify-center items-start">Loading...</h1>
+                        <img src="" alt="Thumbnail" class="videoThumbnail h-7 mr-2">
+                        <h1 class="text-sm font-roboto overflow-clip videoTitle scrollbar-track-slate-900 scrollbar-thumb-slate-950 scrollbar scrollbar-w-1.5 scrollbar-track-rounded-lg scrollbar-thumb-rounded-lg h-10 text-ellipsis flex justify-center items-start">Loading...</h1>
                     </div>
     
-                    <div class="flex flex-row text-sm">
+                    <!-- <div class="flex flex-row text-sm">
                         <p class="videoId">ID: Loading...</p>
-                    </div>
+                    </div> -->
                 </div>
             </div>
             
-            <div id="NothingsHereYet" class="w-full h-full flex flex-col justify-center items-center -z-10 ContentActive text-xs text-gray-500 opacity-0 select-none">
+            <div id="NothingsHereYet" class="w-full h-[94%] flex flex-col justify-center items-center -z-10 ContentActive text-xs text-gray-500 opacity-0 select-none">
                 <h1 class="text-base">📺</h1>
                 <h1 class="text-base">Nothing Is Here (Yet!)</h1>
                 <p>Try downloading something...</p>
