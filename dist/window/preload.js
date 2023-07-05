@@ -46,4 +46,5 @@ electron_1.ipcRenderer.on('event-message', (_, message) => {
         callback(message[1]);
     });
 });
+Log("Loaded!");
 //# sourceMappingURL=preload.js.map

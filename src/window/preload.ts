@@ -64,3 +64,5 @@ ipcRenderer.on('event-message', (_: IpcRendererEvent, message: ServerEvent) => {
 })
 
 //#endregion
+
+Log("Loaded!")

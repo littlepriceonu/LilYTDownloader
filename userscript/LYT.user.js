@@ -353,8 +353,8 @@
 
                 var FilteredFileName = Type.value == "MP4" ? FileName.value + ".mp4" : FileName.value + ".mp3" 
 
-                LYT.send(`DOWNLOAD_VIDEO|${CLIENT_ID}|${document.URL.split("?v=")[1]}|${FilteredFileName}|${Dir.value}|${Type.value}`)
-                console.log(`[LYT] Downloading Video (${document.URL.split("?v=")[1]})...`)
+                LYT.send(`DOWNLOAD_VIDEO|${CLIENT_ID}|${document.URL.split("?v=")[1].split("&")[0]}|${FilteredFileName}|${Dir.value}|${Type.value}`)
+                console.log(`[LYT] Downloading Video (${document.URL.split("?v=")[1].split("&")[0]})...`)
             }
 
             Close.onclick = () => {
@@ -374,7 +374,7 @@
                     OuterUI.style.display = "flex"
                     FileName.value = ""
 
-                    OuterUI.style.top = pageYOffset.toString() + "px"
+                    OuterUI.style.top = scrollY.toString() + "px"
 
                     document.body.style.overflow = "hidden"
                 }

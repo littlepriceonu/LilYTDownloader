@@ -18,7 +18,7 @@ const Menu = electron.Menu
 const Tray = electron.Tray
 import ffmpegPath = require("@ffmpeg-installer/ffmpeg")
 import ffmpeg = require('fluent-ffmpeg')
-import { IPC, YoutubeDownloadRequest } from './window/LYT'
+import { YoutubeDownloadRequest } from './window/LYT'
 ffmpeg.setFfmpegPath(ffmpegPath.path)
 
 // TODO
@@ -50,13 +50,12 @@ const DirMap = {
 var Connections: { [id: string]: ws } = {}
 
 const PORT = 5020
-
 const YTSocket = new ws.WebSocketServer({ port: PORT })
 
 const FFMPEGErrorHandlers = [
     function (userID: string, err: string) {
         err = err.replaceAll("\n", "")
-        console.log(`[FFMPEG_ERR] ${err}`)
+        CLog("FFMPEG_ERR", err)
 
         console.log(err.includes("Invalid argument"))
 
@@ -145,7 +144,7 @@ const IPCHandlers = {
 }
 
 const IPCInvokeHandlers = {
-    'get-video-info': async(event: electron.IpcMainEvent, vid: string) => {
+    'get-video-info': async (_event: electron.IpcMainEvent, vid: string) => {
         var VData: ytdl.videoInfo;
 
         await ytdl.getBasicInfo(`https://youtube.com/watch?v=${vid}`).then(data => {
@@ -352,6 +351,8 @@ app.whenReady().then(() => {
 
     tray = new Tray(electron.nativeImage.createFromPath(path.join(LYTDir, "imgs/icon.png")))
     tray.setContextMenu(ContextMenu)
+    tray.setToolTip("LilYTDownloader")
+    tray.setTitle("LilYTDownloader")
 
     appReady = true
 })

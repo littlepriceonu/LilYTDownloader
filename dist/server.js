@@ -29,7 +29,7 @@ const YTSocket = new ws.WebSocketServer({ port: PORT });
 const FFMPEGErrorHandlers = [
     function (userID, err) {
         err = err.replaceAll("\n", "");
-        console.log(`[FFMPEG_ERR] ${err}`);
+        CLog("FFMPEG_ERR", err);
         console.log(err.includes("Invalid argument"));
         if (err.includes("Invalid argument")) {
             Connections[userID].send("DOWNLOAD_ERROR|INVALID_ARGUMENT|FFMPEG detected an invalid file name argument");
@@ -92,7 +92,7 @@ const IPCHandlers = {
     },
 };
 const IPCInvokeHandlers = {
-    'get-video-info': async (event, vid) => {
+    'get-video-info': async (_event, vid) => {
         var VData;
         await ytdl.getBasicInfo(`https://youtube.com/watch?v=${vid}`).then(data => {
             VData = data;
@@ -245,6 +245,8 @@ app.whenReady().then(() => {
     });
     tray = new Tray(electron.nativeImage.createFromPath(path.join(LYTDir, "imgs/icon.png")));
     tray.setContextMenu(ContextMenu);
+    tray.setToolTip("LilYTDownloader");
+    tray.setTitle("LilYTDownloader");
     appReady = true;
 });
 app.on('window-all-closed', () => {
