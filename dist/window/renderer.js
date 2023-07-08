@@ -23,16 +23,10 @@ const Settings = document.getElementById("Settings");
 const Info = document.getElementById("Info");
 const Home = document.getElementById("Home");
 const TabIndicator = document.getElementById("TabIndicator");
+const SettingsHolder = document.getElementById("SettingsHolder");
+const SettingTemplate = document.getElementsByClassName("Setting").item(0).remove();
 TabIndicator.style.top = `${(TabIndicator.parentElement.getBoundingClientRect().height - TabIndicator.getBoundingClientRect().height) / 2}px`;
 var currentTab = HomeTab;
-setTimeout(() => {
-    TabIndicator.style.left = `${currentTab.getBoundingClientRect().x - currentTab.parentElement.getBoundingClientRect().x}px`;
-    TabIndicator.style.width = `${currentTab.getBoundingClientRect().width}px`;
-}, 150);
-setTimeout(() => {
-    TabIndicator.style.left = `${currentTab.getBoundingClientRect().x - currentTab.parentElement.getBoundingClientRect().x}px`;
-    TabIndicator.style.width = `${currentTab.getBoundingClientRect().width}px`;
-}, 300);
 const TabMap = {
     "HomeTab": Home,
     "InfoTab": Info,
@@ -85,6 +79,9 @@ function UpdateSelectedTab(tabSelected) {
     TabIndicator.style.left = `${currentTab.getBoundingClientRect().x - currentTab.parentElement.getBoundingClientRect().x}px`;
     TabIndicator.style.width = `${currentTab.getBoundingClientRect().width}px`;
 }
+function RegisterSetting(setting) {
+    setting.settingID;
+}
 var access = 0;
 var granted = false;
 Array.from(document.getElementsByTagName("a")).forEach((el) => {
@@ -118,6 +115,14 @@ addEventListener("resize", () => {
         func();
     });
 });
+setTimeout(() => {
+    TabIndicator.style.left = `${currentTab.getBoundingClientRect().x - currentTab.parentElement.getBoundingClientRect().x}px`;
+    TabIndicator.style.width = `${currentTab.getBoundingClientRect().width}px`;
+}, 150);
+setTimeout(() => {
+    TabIndicator.style.left = `${currentTab.getBoundingClientRect().x - currentTab.parentElement.getBoundingClientRect().x}px`;
+    TabIndicator.style.width = `${currentTab.getBoundingClientRect().width}px`;
+}, 300);
 SettingsTab.onclick = () => {
     UpdateSelectedTab(SettingsTab);
 };

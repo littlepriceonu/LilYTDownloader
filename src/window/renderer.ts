@@ -1,4 +1,4 @@
-import { YoutubeDownloadRequest as YoutubeDownloadData } from "./LYT"
+import { LYTSetting, YoutubeDownloadRequest as YoutubeDownloadData } from "./LYT"
 
 const _Region = "RENDERER"
 
@@ -34,20 +34,13 @@ const Home = <HTMLDivElement>document.getElementById("Home")
 
 const TabIndicator = <HTMLDivElement>document.getElementById("TabIndicator")
 
+const SettingsHolder = <HTMLDivElement>document.getElementById("SettingsHolder")
+const SettingTemplate = <HTMLDivElement>document.getElementsByClassName("Setting").item(0)
+SettingTemplate.remove()
+
 TabIndicator.style.top = `${(TabIndicator.parentElement.getBoundingClientRect().height-TabIndicator.getBoundingClientRect().height)/2}px`
 
 var currentTab = HomeTab
-
-// stupid timeouts cause font-awesome needs time to load icons
-setTimeout(() => {
-    TabIndicator.style.left = `${currentTab.getBoundingClientRect().x-currentTab.parentElement.getBoundingClientRect().x}px`
-    TabIndicator.style.width = `${currentTab.getBoundingClientRect().width}px`
-}, 150);
-
-setTimeout(() => {
-    TabIndicator.style.left = `${currentTab.getBoundingClientRect().x-currentTab.parentElement.getBoundingClientRect().x}px`
-    TabIndicator.style.width = `${currentTab.getBoundingClientRect().width}px`
-}, 300);
 
 const TabMap: { [key: string]: HTMLDivElement} = {
     "HomeTab": Home,
@@ -67,6 +60,10 @@ const DownloadTypeIconMap = {
 }
 
 var CurrentInfoID: string;
+
+var RegisteredSettings: {[settingID: string]: LYTSetting} = {
+
+}
 
 //#region Functions
 
@@ -136,6 +133,27 @@ function UpdateSelectedTab(tabSelected: HTMLDivElement, ) {
     TabIndicator.style.width = `${currentTab.getBoundingClientRect().width}px`
 }
 
+function RegisterSetting(setting: LYTSetting) {
+    if (RegisteredSettings[setting.settingID]) {CLog_("REGISTER_SETTING", `Setting ${setting.settingID} has already been registered!`); return;}
+
+    const newSetting = <HTMLDivElement>SettingTemplate.cloneNode(true)
+    newSetting.id = setting.settingID
+
+    // Implement saving settings on server
+    document.getElementById(`#${setting.settingID} > div > .settingName`).innerText = setting.title
+    document.getElementById(`#${setting.settingID} > .settingDescription`).innerText = setting.description
+
+    const settingToggle = <HTMLInputElement>document.getElementById(`#${setting.settingID} > div > .settingState`)
+
+    settingToggle.onclick = (event) => {
+        setting.eventCallback.forEach(func => {
+            func(settingToggle.checked, event)
+        })
+    }
+
+    RegisteredSettings[setting.settingID] = setting 
+}
+
 //#endregion
 
 //#region Misc
@@ -181,6 +199,17 @@ addEventListener("resize", ()=>{
 //#endregion
 
 //#region Tab Functionality
+
+// stupid timeouts cause font-awesome needs time to load icons
+setTimeout(() => {
+    TabIndicator.style.left = `${currentTab.getBoundingClientRect().x-currentTab.parentElement.getBoundingClientRect().x}px`
+    TabIndicator.style.width = `${currentTab.getBoundingClientRect().width}px`
+}, 150);
+
+setTimeout(() => {
+    TabIndicator.style.left = `${currentTab.getBoundingClientRect().x-currentTab.parentElement.getBoundingClientRect().x}px`
+    TabIndicator.style.width = `${currentTab.getBoundingClientRect().width}px`
+}, 300);
 
 SettingsTab.onclick = () => {
     UpdateSelectedTab(SettingsTab)

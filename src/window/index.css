@@ -106,5 +106,5 @@ h1.ACCESS_GRANTED {
 }
 
 .springTimingFunction {
-    transition-timing-function: cubic-bezier(.96,-0.72,.13,1.7);
+    transition-timing-function: cubic-bezier(1,-0.13,.58,1.87);
 }

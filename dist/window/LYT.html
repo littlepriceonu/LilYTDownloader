@@ -28,7 +28,7 @@
         <div id="SideBar" class="w-[30%] h-full bg-slate-800 flex-col items-center justify-start SideBarActive relative rounded-tr-lg">
 
             <div class="w-full h-[5%] bg-[rgba(255,255,255,0.05)] rounded-tr-lg flex justify-start items-center">
-                <h1 class="ml-2 font-semibold">Downloads</h1>
+                <h1 class="ml-2 font-semibold text-sm xl:text-base">Downloads</h1>
             </div>
 
             <div id="Videos" class="w-full h-[95%] absolute -z-10 opacity-0 flex flex-col items-center justify-start space-y-1">
@@ -37,7 +37,7 @@
                         <img src="" alt="Thumbnail" class="videoThumbnail h-11 mr-2">
                         
                         <div class="flex flex-col items-start justify-start">
-                            <h1 class="text-sm font-roboto overflow-clip videoTitle scrollbar-track-slate-900 scrollbar-thumb-slate-950 scrollbar scrollbar-w-1.5 scrollbar-track-rounded-lg scrollbar-thumb-rounded-lg h-8 text-ellipsis flex justify-center items-start">Loading...</h1>
+                            <h1 class="text-sm leading-[1.1em] font-roboto overflow-clip videoTitle scrollbar-track-slate-900 scrollbar-thumb-slate-950 scrollbar scrollbar-w-1.5 scrollbar-track-rounded-lg scrollbar-thumb-rounded-lg h-8 text-ellipsis flex justify-center items-start">Loading...</h1>
                             
                             <div class="flex flex-row items-center justify-start">
                                 <div data-status="success" class="downloadProgress transition-all duration-300 relative top-[-2px] xl:top-[-7px] w-4 h-4 rounded-full fa fa-xs fa-exclamation flex items-center justify-center">
@@ -81,25 +81,26 @@
             </div>
 
             <div id="Settings" class="w-full h-full absolute -z-10 opacity-0 transition-[opacity] duration-500 flex flex-col items-center justify-center">
-                <div class="">
-                    <div class="Setting flex flex-col items-start justify-start w-44">
+                <div id="SettingsHolder" class="grid gap-10 grid-cols-3 p-10">
 
+                    <div class="Setting flex flex-col items-start justify-start w-44">
                         <div class="flex flex-row">
-                            <h1 class="text-lg">Test Settings</h1>
-                            <input type="checkbox" class="ml-14 w-4 h-4 bg-gray-800 accent-blue-700 mt-2" name="Test" id="TestSettings">
+                            <h1 class="text-lg settingName">Test Settings</h1>
+                            <input type="checkbox" class="settingState ml-10 w-4 h-4 bg-gray-800 accent-blue-700 mt-2" name="Test" id="TestSettings">
                         </div>
 
-                        <p class="text-gray-700 text-sm">wow such cool much test</p>
+                        <p class="settingDescription text-gray-700 text-sm">wow such cool much test</p>
                     </div>
+                    
                 </div>
             </div>
 
             <div id="OuterTabBar" class="w-full h-20 flex items-center justify-center absolute z-20">
                 <div id="TabBar" class="relative w-[80%] rounded-md h-14 bg-gradient-to-tr from-[rgb(30_41_59)] to-[rgb(42,66,104)] transition-all duration-300 hover:drop-shadow-[0_5px_10px_black]">
                     <div class="flex items-center justify-around w-full h-full">
-                        <i id="HomeTab" class="fa-solid fa-xl fa-house cursor-pointer springTimingFunction transition-all duration-500 h-fit p-[20px_10px] rounded-md flex items-center justify-center z-30 active:scale-125"></i>
-                        <i id="InfoTab" class="fa-solid fa-xl fa-play cursor-pointer springTimingFunction transition-all duration-500 h-fit p-[20px_10px] rounded-md flex items-center justify-center z-30 active:scale-125"></i>
-                        <i id="SettingsTab" class="fa-solid fa-xl fa-gear cursor-pointer springTimingFunction transition-all duration-500 h-fit p-[20px_10px] rounded-md flex items-center justify-center z-30 active:scale-125"></i>
+                        <i id="HomeTab" class="fa-solid fa-xl fa-house cursor-pointer springTimingFunction transition-all duration-[400ms] h-fit p-[20px_10px] rounded-md flex items-center justify-center z-30 active:scale-125"></i>
+                        <i id="InfoTab" class="fa-solid fa-xl fa-play cursor-pointer springTimingFunction transition-all duration-[400ms] h-fit p-[20px_10px] rounded-md flex items-center justify-center z-30 active:scale-125"></i>
+                        <i id="SettingsTab" class="fa-solid fa-xl fa-gear cursor-pointer springTimingFunction transition-all duration-[400ms] h-fit p-[20px_10px] rounded-md flex items-center justify-center z-30 active:scale-125"></i>
                     </div>
 
                     <div id="TabIndicator" class="transition-all duration-500 absolute TabSelected w-10 h-10 rounded-md bg-gradient-to-tr from-[rgb(65,115,190)] to-[rgb(10,46,112)]"></div>

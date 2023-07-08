@@ -27,4 +27,12 @@ export interface YoutubeDownloadRequest extends ServerEventData {
     error: string,
 }
 
+export interface LYTSetting {
+    title: string,
+    description: string,
+    settingID: `LYT${string}`,
+    toggled: boolean,
+    eventCallback: Function[],
+} 
+
 export type ServerEvent =  [type: string, data: ServerEventData]
