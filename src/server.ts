@@ -122,9 +122,11 @@ function Log(...toLog: any[]) {
 //#endregion
 
 // clear everything in the "temp" directory
-fs.readdirSync(path.join(LYTDir, "temp")).forEach(file => {
-    fs.unlinkSync(path.join(LYTDir, `temp/${file}`))
-})
+if (fs.existsSync(path.join(LYTDir, "temp"))) {
+    fs.readdirSync(path.join(LYTDir, "temp")).forEach(file => {
+        fs.unlinkSync(path.join(LYTDir, `temp/${file}`))
+    })
+}
 
 const ContextMenu = electron.Menu.buildFromTemplate([
     { label: 'Show', click:  function(){

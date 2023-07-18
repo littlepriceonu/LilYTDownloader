@@ -21,18 +21,18 @@
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@vibrant/types": "^3.2.1-alpha.1",
-    "electron": "^25.2.0",
     "fluent-ffmpeg": "^2.1.2",
     "nodemon": "^2.0.22",
     "tailwind": "^4.0.0",
     "tailwind-scrollbar": "^3.0.4",
     "ws": "^8.13.0",
-    "ytdl-core": "^4.11.4"
+    "ytdl-core": "^4.11.5"
   },
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.21",
     "@types/node": "^20.3.1",
     "@types/ws": "^8.5.5",
+    "electron": "^25.3.0",
     "eslint": "^8.43.0",
     "eslint-config-semistandard": "^17.0.0",
     "eslint-config-standard": "^17.1.0",

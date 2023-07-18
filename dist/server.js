@@ -74,9 +74,11 @@ function CLog(type, ...toLog) {
 function Log(...toLog) {
     console.log(`[${Region}]`, ...toLog);
 }
-fs.readdirSync(path.join(LYTDir, "temp")).forEach(file => {
-    fs.unlinkSync(path.join(LYTDir, `temp/${file}`));
-});
+if (fs.existsSync(path.join(LYTDir, "temp"))) {
+    fs.readdirSync(path.join(LYTDir, "temp")).forEach(file => {
+        fs.unlinkSync(path.join(LYTDir, `temp/${file}`));
+    });
+}
 const ContextMenu = electron.Menu.buildFromTemplate([
     { label: 'Show', click: function () {
             mainWindow.show();

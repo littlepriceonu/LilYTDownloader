@@ -24,7 +24,8 @@ const Info = document.getElementById("Info");
 const Home = document.getElementById("Home");
 const TabIndicator = document.getElementById("TabIndicator");
 const SettingsHolder = document.getElementById("SettingsHolder");
-const SettingTemplate = document.getElementsByClassName("Setting").item(0).remove();
+const SettingTemplate = document.getElementsByClassName("Setting").item(0);
+SettingTemplate.remove();
 TabIndicator.style.top = `${(TabIndicator.parentElement.getBoundingClientRect().height - TabIndicator.getBoundingClientRect().height) / 2}px`;
 var currentTab = HomeTab;
 const TabMap = {
@@ -42,6 +43,7 @@ const DownloadTypeIconMap = {
     "MP3": "fa-headphones"
 };
 var CurrentInfoID;
+var RegisteredSettings = {};
 const OnResize = [
     function () {
         OuterTabBar.style.top = `${DownloadInfo.getBoundingClientRect().height - OuterTabBar.getBoundingClientRect().height}px`;
@@ -80,7 +82,21 @@ function UpdateSelectedTab(tabSelected) {
     TabIndicator.style.width = `${currentTab.getBoundingClientRect().width}px`;
 }
 function RegisterSetting(setting) {
-    setting.settingID;
+    if (RegisteredSettings[setting.settingID]) {
+        CLog_("REGISTER_SETTING", `Setting ${setting.settingID} has already been registered!`);
+        return;
+    }
+    const newSetting = SettingTemplate.cloneNode(true);
+    newSetting.id = setting.settingID;
+    document.getElementById(`#${setting.settingID} > div > .settingName`).innerText = setting.title;
+    document.getElementById(`#${setting.settingID} > .settingDescription`).innerText = setting.description;
+    const settingToggle = document.getElementById(`#${setting.settingID} > div > .settingState`);
+    settingToggle.onclick = (event) => {
+        setting.eventCallback.forEach(func => {
+            func(settingToggle.checked, event);
+        });
+    };
+    RegisteredSettings[setting.settingID] = setting;
 }
 var access = 0;
 var granted = false;
