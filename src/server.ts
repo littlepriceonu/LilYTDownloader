@@ -24,6 +24,7 @@ ffmpeg.setFfmpegPath(ffmpegPath.path)
 // TODO
 // Install entire playlists to a folder
 // set up heartbeats on the server & client so I can kill dead client connections
+// Track 
 // 
 // Userscript:
 //  Folder Select (?)
@@ -36,6 +37,7 @@ ffmpeg.setFfmpegPath(ffmpegPath.path)
 // App:
 //  Confetti if on info screen and download finishes (maybe... ?)
 //  Add a little indicator that tells the user if the server has any open websocket connects to tell weither its connected properly or not
+//  Tell the user the current version of LYT in the home page and maybe some other fun facts that cycle or something
 //  
 
 const Username = os.userInfo().username
