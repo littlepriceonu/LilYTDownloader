@@ -15,10 +15,6 @@ const TitleBarEventMap = {
     "CLOSE": "close-clicked",
 };
 const ExposedIPC = {
-    sendTitleBarEvent: (type) => {
-        CLog("SEND_TITLE_BAR_EVENT", type, TitleBarEventMap[type]);
-        electron_1.ipcRenderer.send(TitleBarEventMap[type]);
-    },
     openURL: (url) => {
         electron_1.ipcRenderer.send("open-url", url);
     },

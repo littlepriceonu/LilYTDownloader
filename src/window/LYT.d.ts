@@ -4,11 +4,11 @@ declare global {
     interface Window {
         IPC: IPC;
         Vibrant: any;
+        Confetti: any;
     }
 }
 
 export interface IPC {
-    sendTitleBarEvent(type: "MAXIMIZE"|"MINIMIZE"|"CLOSE"): undefined,
     invokeInfoRequest(vid: string): Promise<ytdl.videoInfo>,
     openURL(url: string): undefined,
     subscribeToEvent(event: string, callback: Function): undefined,

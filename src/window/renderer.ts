@@ -1,11 +1,11 @@
-import { LYTSetting, YoutubeDownloadRequest as YoutubeDownloadData, YoutubeDownloadUpdate } from "./LYT"
+import { DownloadedParts, LYTSetting, YoutubeDownloadRequest as YoutubeDownloadData, YoutubeDownloadUpdate } from "./LYT"
 
 const _Region = "RENDERER"
 
 const videoDisplay = document.getElementsByClassName('videoDisplay').item(0)
 videoDisplay.remove()
 
-const ThumbNailString = "https://i.ytimg.com/vi/[ID]/default.jpg"
+const ThumbNailString = "https://i.ytimg.com/vi/[ID]/default.jpg?sqp=-oaymwEcCNACELwBSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLDPQuXeHaS8R2hZSgRzLiOskHiziQ"
 
 const ErrorMap = {
     "EPREM": "No Permission To Create This File!",
@@ -65,6 +65,14 @@ const DownloadedPartsMap = {
     "DOWNLOAD_COMPLETE": "FinalOutput"
 }
 
+const ProgressTextMap: {[id: string]: string} = {
+    "Video_!Audio_!FinalOutput_": "Downloading Audio...",
+    "Video_Audio_!FinalOutput_": "Finalizing...",
+    "!Video_Audio_!FinalOutput_": "Downloading Video...",
+    "!Video_!Audio_!FinalOutput_": "Downloading Video & Audio...",
+    "Video_Audio_FinalOutput_": "Download Complete!",
+}
+
 var CurrentInfoID: string;
 
 var RegisteredSettings: {[settingID: string]: LYTSetting} = {
@@ -99,7 +107,12 @@ function getVideoProgressIconFromID(id: `${string}-${string}-${string}-${string}
     return document.querySelector(`#${id} > div > div > div > div.downloadProgress`)
 }
 
-function addVideoToSidebar(data: YoutubeDownloadData) {
+/**
+ * Adds a video to download in the sidebar
+ * @param `data` Youtube download data to add to the sidebar
+ * @returns `Video` The HTML element that was added to the sidebar
+ */
+function addVideoToSidebar(data: YoutubeDownloadData): HTMLDivElement {
     var newVideoDisplay = videoDisplay.cloneNode(true) as HTMLDivElement
     newVideoDisplay.id = data.downloadID
 
@@ -137,9 +150,15 @@ function addVideoToSidebar(data: YoutubeDownloadData) {
 
         title.innerText = videoData.videoDetails.title
     })
+
+    return newVideoDisplay
 }
 
-function UpdateSelectedTab(tabSelected: HTMLDivElement, ) {
+/**
+ * Updates the currently selected tab (i.e. Home, Info, Settings)
+ * @param `tabSelected` Tab that was selected 
+ */
+function UpdateSelectedTab(tabSelected: HTMLDivElement) {
     if (currentTab == tabSelected) return
 
     TabMap[currentTab.id].classList.remove("ContentActive")
@@ -151,6 +170,10 @@ function UpdateSelectedTab(tabSelected: HTMLDivElement, ) {
     TabIndicator.style.width = `${currentTab.getBoundingClientRect().width}px`
 }
 
+/**
+ * Registers a new LYT setting
+ * @param `setting` Data for the setting to register (see LYTSetting)
+ */
 function RegisterSetting(setting: LYTSetting) {
     if (RegisteredSettings[setting.settingID]) {CLog_("REGISTER_SETTING", `Setting ${setting.settingID} has already been registered!`); return;}
 
@@ -170,6 +193,43 @@ function RegisterSetting(setting: LYTSetting) {
     }
 
     RegisteredSettings[setting.settingID] = setting 
+}
+
+/**
+ * Updates the progress bar in the info tab
+ * @param `PartsFinished` Parts of a download that have finsished.
+ * @param `TotalParts` The total parts of a download that have to finish.
+ * @returns `DownloadProgressBar` The HTML element of the progressbar, `IsFinshed` If the progress bar is full
+ */
+function UpdateProgressBar(PartsFinished: number, TotalParts: number): [HTMLDivElement, boolean] {
+    const DownloadProgressBar = <HTMLDivElement>document.getElementById("DownloadProgressBar")
+    const FullLength = DownloadProgressBar.parentElement.getBoundingClientRect().width
+    const LengthPerPart = FullLength / TotalParts
+
+    DownloadProgressBar.style.width = `${LengthPerPart * PartsFinished}px`
+
+    return [DownloadProgressBar, (PartsFinished == TotalParts)]
+}
+
+function GetProgressTextFromFinishedParts(PartsFinished: DownloadedParts, DownloadID: `${string}-${string}-${string}-${string}-${string}`): string {
+    // if the text doesn't get assigned lmfao
+    var ProgressText = "Progress Text Error!"
+
+    var ProgressToText = ""
+
+    Object.entries(PartsFinished).forEach(part => {
+        if (part[0] == "Audio" && Downloads[DownloadID].type == "MP3") {ProgressToText += "Audio_"; return;}
+
+        part[1] ? ProgressToText += part[0] : ProgressToText += `!${part[0]}` 
+
+        ProgressToText += "_"
+    })
+
+    CLog_("PROGRESS_TO_TEXT", ProgressToText)
+
+    ProgressText = ProgressTextMap[ProgressToText]
+
+    return ProgressText
 }
 
 //#endregion
@@ -258,17 +318,25 @@ window.IPC.subscribeToEvent("DOWNLOAD_REQUESTED", (data: YoutubeDownloadData) =>
 
     Downloads[data.downloadID] = data
 
-    addVideoToSidebar(data)
+    const sidebarVideo = addVideoToSidebar(data)
+
+    sidebarVideo.onclick = () => {
+        
+    }
 
     NothingsHereYet.classList.remove("ContentActive")
     Videos.classList.add("ContentActive")
 })
 
+// Updates a download with the recieved data
 window.IPC.subscribeToEvent("DOWNLOAD_UPDATE", (data: YoutubeDownloadUpdate) => {
+    CLog_("DOWNLOAD_UPDATE", "Download Update Data Recieved!")
+
     if (!data.updateType) throw new Error("DOWNLOAD_UPDATE did not have an updateType");
 
     Downloads[data.downloadID].updates ? Downloads[data.downloadID].updates.push(data) : Downloads[data.downloadID].updates = [data]
 
+    // sets the little icon on the sidebar to a little exclamation point and make the icon red if the download errors
     if (data.isError) {
         getVideoProgressIconFromID(data.downloadID).classList.add(StatusIconMap["error"])
         getVideoProgressIconFromID(data.downloadID).setAttribute("data-status", "error")
@@ -276,14 +344,36 @@ window.IPC.subscribeToEvent("DOWNLOAD_UPDATE", (data: YoutubeDownloadUpdate) => 
         Downloads[data.downloadID].error = data.data.error
     }
 
+    // sets the little icon on the sidebar to a little check and makes the icon green if the download is complete
     if (!Downloads[data.downloadID].hasErrored && data.updateType == "DOWNLOAD_COMPLETE") {
         getVideoProgressIconFromID(data.downloadID).classList.add(StatusIconMap["success"])
         getVideoProgressIconFromID(data.downloadID).setAttribute("data-status", "success")
         Downloads[data.downloadID].hasFinished = true
     }
 
+    // if its info about how far the download has progressed
     if (DownloadedPartsMap[data.updateType]) {
         Downloads[data.downloadID].partsDownloaded[DownloadedPartsMap[data.updateType]] = true
+
+        //if (CurrentInfoID == data.downloadID) {
+            const ProgressText = <HTMLDivElement>document.getElementById("ProgressText")
+            const partsDownloaded = Downloads[data.downloadID].partsDownloaded 
+
+            ProgressText.innerText = GetProgressTextFromFinishedParts(partsDownloaded, data.downloadID)
+
+            var parts: number = 0
+            var totalParts: number = 0
+
+            Object.entries(partsDownloaded).forEach(part => {
+                totalParts += 1
+
+                if (part[1] == true) {
+                    parts += 1
+                }
+            })
+
+            CLog_("PROGRESS_BAR", UpdateProgressBar(parts, totalParts))
+        //}
     }
 })
 

@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const _Region = "RENDERER";
 const videoDisplay = document.getElementsByClassName('videoDisplay').item(0);
 videoDisplay.remove();
-const ThumbNailString = "https://i.ytimg.com/vi/[ID]/default.jpg";
+const ThumbNailString = "https://i.ytimg.com/vi/[ID]/default.jpg?sqp=-oaymwEcCNACELwBSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLDPQuXeHaS8R2hZSgRzLiOskHiziQ";
 const ErrorMap = {
     "EPREM": "No Permission To Create This File!",
     "EISDIR": "File Name Invalid!",
@@ -47,6 +47,13 @@ const DownloadedPartsMap = {
     "AUDIO_DOWNLOADED": "Audio",
     "DOWNLOAD_COMPLETE": "FinalOutput"
 };
+const ProgressTextMap = {
+    "Video_!Audio_!FinalOutput_": "Downloading Audio...",
+    "Video_Audio_!FinalOutput_": "Finalizing...",
+    "!Video_Audio_!FinalOutput_": "Downloading Video...",
+    "!Video_!Audio_!FinalOutput_": "Downloading Video & Audio...",
+    "Video_Audio_FinalOutput_": "Download Complete!",
+};
 var CurrentInfoID;
 var RegisteredSettings = {};
 const OnResize = [
@@ -84,6 +91,7 @@ function addVideoToSidebar(data) {
         CLog_("INVOKE_INFO_REQUEST", videoData);
         title.innerText = videoData.videoDetails.title;
     });
+    return newVideoDisplay;
 }
 function UpdateSelectedTab(tabSelected) {
     if (currentTab == tabSelected)
@@ -110,6 +118,28 @@ function RegisterSetting(setting) {
         });
     };
     RegisteredSettings[setting.settingID] = setting;
+}
+function UpdateProgressBar(PartsFinished, TotalParts) {
+    const DownloadProgressBar = document.getElementById("DownloadProgressBar");
+    const FullLength = DownloadProgressBar.parentElement.getBoundingClientRect().width;
+    const LengthPerPart = FullLength / TotalParts;
+    DownloadProgressBar.style.width = `${LengthPerPart * PartsFinished}px`;
+    return [DownloadProgressBar, (PartsFinished == TotalParts)];
+}
+function GetProgressTextFromFinishedParts(PartsFinished, DownloadID) {
+    var ProgressText = "Progress Text Error!";
+    var ProgressToText = "";
+    Object.entries(PartsFinished).forEach(part => {
+        if (part[0] == "Audio" && Downloads[DownloadID].type == "MP3") {
+            ProgressToText += "Audio_";
+            return;
+        }
+        part[1] ? ProgressToText += part[0] : ProgressToText += `!${part[0]}`;
+        ProgressToText += "_";
+    });
+    CLog_("PROGRESS_TO_TEXT", ProgressToText);
+    ProgressText = ProgressTextMap[ProgressToText];
+    return ProgressText;
 }
 var access = 0;
 var granted = false;
@@ -171,11 +201,14 @@ window.IPC.subscribeToEvent("DOWNLOAD_REQUESTED", (data) => {
         FinalOutput: false,
     };
     Downloads[data.downloadID] = data;
-    addVideoToSidebar(data);
+    const sidebarVideo = addVideoToSidebar(data);
+    sidebarVideo.onclick = () => {
+    };
     NothingsHereYet.classList.remove("ContentActive");
     Videos.classList.add("ContentActive");
 });
 window.IPC.subscribeToEvent("DOWNLOAD_UPDATE", (data) => {
+    CLog_("DOWNLOAD_UPDATE", "Download Update Data Recieved!");
     if (!data.updateType)
         throw new Error("DOWNLOAD_UPDATE did not have an updateType");
     Downloads[data.downloadID].updates ? Downloads[data.downloadID].updates.push(data) : Downloads[data.downloadID].updates = [data];
@@ -192,6 +225,18 @@ window.IPC.subscribeToEvent("DOWNLOAD_UPDATE", (data) => {
     }
     if (DownloadedPartsMap[data.updateType]) {
         Downloads[data.downloadID].partsDownloaded[DownloadedPartsMap[data.updateType]] = true;
+        const ProgressText = document.getElementById("ProgressText");
+        const partsDownloaded = Downloads[data.downloadID].partsDownloaded;
+        ProgressText.innerText = GetProgressTextFromFinishedParts(partsDownloaded, data.downloadID);
+        var parts = 0;
+        var totalParts = 0;
+        Object.entries(partsDownloaded).forEach(part => {
+            totalParts += 1;
+            if (part[1] == true) {
+                parts += 1;
+            }
+        });
+        CLog_("PROGRESS_BAR", UpdateProgressBar(parts, totalParts));
     }
 });
 Log_("Loaded!");

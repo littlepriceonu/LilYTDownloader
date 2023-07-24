@@ -34,9 +34,9 @@ ffmpeg.setFfmpegPath(ffmpegPath.path)
 //  Check if file exists, send message to client warning about overwrite
 //
 // App:
-//  Make video download element look good lmao
-//  Progress on every item
-//  Click to see info about download
+//  Confetti if on info screen and download finishes (maybe... ?)
+//  Add a little indicator that tells the user if the server has any open websocket connects to tell weither its connected properly or not
+//  
 
 const Username = os.userInfo().username
 

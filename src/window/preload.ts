@@ -28,10 +28,6 @@ const TitleBarEventMap = {
 }
 
 const ExposedIPC: IPC = {
-    sendTitleBarEvent: (type: "MAXIMIZE"|"MINIMIZE"|"CLOSE") => {
-        CLog("SEND_TITLE_BAR_EVENT", type, TitleBarEventMap[type])
-        ipcRenderer.send(TitleBarEventMap[type])
-    },
     openURL: (url: string) => {
         ipcRenderer.send("open-url", url)
     },

@@ -55,13 +55,4 @@ h1.ACCESS_GRANTED {
         @apply bg-red-600 drop-shadow-[0_0_5px_red]
     } 
 }
-
-.progressCircle {
-    animation-fill-mode: forwards;
-    animation-timing-function: ease-in-out;
-    animation-duration: 1s;
-
-    background-image: conic-gradient(green 0deg var(--finished-progress), #c2410c 0deg 360deg);
-}
-
 /* radial-gradient(closest-side, #0F1729 79%, transparent 80% 100% ), conic-gradient(hotpink 75%, pink 0) */

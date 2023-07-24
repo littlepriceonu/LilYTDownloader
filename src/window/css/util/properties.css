@@ -16,12 +16,6 @@
     inherits: false;
 }
 
-@property --finished-progress {
-    syntax: "<angle>";
-    initial-value: 0deg;
-    inherits: false;
-}
-
 :root {
     --gradient-from: red;
     --gradient-to: blue;
