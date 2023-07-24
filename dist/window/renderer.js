@@ -42,6 +42,11 @@ const DownloadTypeIconMap = {
     "MP4": "fa-video",
     "MP3": "fa-headphones"
 };
+const DownloadedPartsMap = {
+    "VIDEO_DOWNLOADED": "Video",
+    "AUDIO_DOWNLOADED": "Audio",
+    "DOWNLOAD_COMPLETE": "FinalOutput"
+};
 var CurrentInfoID;
 var RegisteredSettings = {};
 const OnResize = [
@@ -59,6 +64,12 @@ function CLog_(type, ...toLog) {
 function Log_(...toLog) {
     console.log(`[${_Region}]`, ...toLog);
 }
+function getVideoTypeIconFromID(id) {
+    return document.querySelector(`#${id} > div > div > div > div.typeIndicator`);
+}
+function getVideoProgressIconFromID(id) {
+    return document.querySelector(`#${id} > div > div > div > div.downloadProgress`);
+}
 function addVideoToSidebar(data) {
     var newVideoDisplay = videoDisplay.cloneNode(true);
     newVideoDisplay.id = data.downloadID;
@@ -67,6 +78,8 @@ function addVideoToSidebar(data) {
     var thumbnail = document.querySelector(`#${data.downloadID} > div > .videoThumbnail`);
     thumbnail.src = ThumbNailString.replace("[ID]", data.vid);
     var title = document.querySelector(`#${data.downloadID} > div > div > .videoTitle`);
+    getVideoTypeIconFromID(data.downloadID).classList.add(DownloadTypeIconMap[data.type]);
+    getVideoProgressIconFromID(data.downloadID).setAttribute("data-status", "inprogress");
     window.IPC.invokeInfoRequest(data.vid).then(videoData => {
         CLog_("INVOKE_INFO_REQUEST", videoData);
         title.innerText = videoData.videoDetails.title;
@@ -149,10 +162,37 @@ InfoTab.onclick = () => {
     UpdateSelectedTab(InfoTab);
 };
 window.IPC.subscribeToEvent("DOWNLOAD_REQUESTED", (data) => {
+    data.type == "MP3" ? data.partsDownloaded = {
+        Audio: false,
+        FinalOutput: false
+    } : data.partsDownloaded = {
+        Video: false,
+        Audio: false,
+        FinalOutput: false,
+    };
     Downloads[data.downloadID] = data;
     addVideoToSidebar(data);
     NothingsHereYet.classList.remove("ContentActive");
     Videos.classList.add("ContentActive");
+});
+window.IPC.subscribeToEvent("DOWNLOAD_UPDATE", (data) => {
+    if (!data.updateType)
+        throw new Error("DOWNLOAD_UPDATE did not have an updateType");
+    Downloads[data.downloadID].updates ? Downloads[data.downloadID].updates.push(data) : Downloads[data.downloadID].updates = [data];
+    if (data.isError) {
+        getVideoProgressIconFromID(data.downloadID).classList.add(StatusIconMap["error"]);
+        getVideoProgressIconFromID(data.downloadID).setAttribute("data-status", "error");
+        Downloads[data.downloadID].hasErrored = true;
+        Downloads[data.downloadID].error = data.data.error;
+    }
+    if (!Downloads[data.downloadID].hasErrored && data.updateType == "DOWNLOAD_COMPLETE") {
+        getVideoProgressIconFromID(data.downloadID).classList.add(StatusIconMap["success"]);
+        getVideoProgressIconFromID(data.downloadID).setAttribute("data-status", "success");
+        Downloads[data.downloadID].hasFinished = true;
+    }
+    if (DownloadedPartsMap[data.updateType]) {
+        Downloads[data.downloadID].partsDownloaded[DownloadedPartsMap[data.updateType]] = true;
+    }
 });
 Log_("Loaded!");
 //# sourceMappingURL=renderer.js.map

@@ -18,7 +18,7 @@ const Menu = electron.Menu
 const Tray = electron.Tray
 import ffmpegPath = require("@ffmpeg-installer/ffmpeg")
 import ffmpeg = require('fluent-ffmpeg')
-import { YoutubeDownloadRequest } from './window/LYT'
+import { YoutubeDownloadRequest, YoutubeDownloadUpdate, YoutubeUpdateType } from './window/LYT'
 ffmpeg.setFfmpegPath(ffmpegPath.path)
 
 // TODO
@@ -94,16 +94,20 @@ function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1040,
         height: 600,
+
         minWidth: 1040,
         minHeight: 600,
+
         titleBarStyle: "hidden",
         titleBarOverlay: {
             color: "#0f172a",
             symbolColor: "#ffffff"
         },
+
         webPreferences: {
-            preload: path.join(__dirname, 'window/preload.js')
+            preload: path.join(__dirname, 'window/preload.js'),
         },
+
         icon: path.join(LYTDir, "/imgs/icon.png"),
     })
 
@@ -122,11 +126,9 @@ function Log(...toLog: any[]) {
 //#endregion
 
 // clear everything in the "temp" directory
-if (fs.existsSync(path.join(LYTDir, "temp"))) {
-    fs.readdirSync(path.join(LYTDir, "temp")).forEach(file => {
-        fs.unlinkSync(path.join(LYTDir, `temp/${file}`))
-    })
-}
+fs.readdirSync(path.join(LYTDir, "temp")).forEach(file => {
+    fs.unlinkSync(path.join(LYTDir, `temp/${file}`))
+})
 
 const ContextMenu = electron.Menu.buildFromTemplate([
     { label: 'Show', click:  function(){
@@ -220,6 +222,16 @@ const SocketHandlers = {
                         // Let the client know we're done
                         Connections[userID].send("DOWNLOAD_COMPLETE|")
 
+                        const updateType: YoutubeUpdateType = "DOWNLOAD_COMPLETE"
+
+                        var updateData: YoutubeDownloadUpdate = {
+                            downloadID: DownloadID,
+                            updateType: updateType,
+                            data: {},
+                        }
+            
+                        sendMessageToClient("event-message", ["DOWNLOAD_UPDATE", updateData])
+
                         CLog("FFMPEG_MP4", "Video Complete!")
                     }).on("error", (err) => {
                         // If an error happened, run all the handlers, which will fix something (maybe) and let the client know
@@ -236,6 +248,16 @@ const SocketHandlers = {
 
                         // Let the client know we're done
                         Connections[userID].send("DOWNLOAD_COMPLETE|")
+
+                        const updateType: YoutubeUpdateType = "DOWNLOAD_COMPLETE"
+
+                        var updateData: YoutubeDownloadUpdate = {
+                            downloadID: DownloadID,
+                            updateType: updateType,
+                            data: {},
+                        }
+            
+                        sendMessageToClient("event-message", ["DOWNLOAD_UPDATE", updateData])
 
                         CLog("FFMPEG_MP3", "Audio Complete!")
                     }).on("error", (err) => {
@@ -261,35 +283,85 @@ const SocketHandlers = {
         // Download Video
         if (type == "MP4") {
             ytdl(`http://youtube.com/watch?v=${vid}`, { quality: "highestvideo", filter: (format) => { return format.mimeType.includes("video/mp4") && format.hasVideo } }).pipe(fs.createWriteStream(`${LYTDir}/temp/${tempFileName}_V.mp4`)).on('finish', () => {
+                
                 VideoDownloaded = true
 
                 CLog("YTDL_CORE", "Video Download Complete!")
 
                 HandleVideo()
+
+                const updateType: YoutubeUpdateType = "VIDEO_DOWNLOADED"
+
+                var updateData: YoutubeDownloadUpdate = {
+                    downloadID: DownloadID,
+                    updateType: updateType,
+                    data: {},
+                }
+    
+                sendMessageToClient("event-message", ["DOWNLOAD_UPDATE", updateData])
+
             }).on("error", (err) => {
+
                 if (ErrorOccured) return;
 
                 CLog(`YTDL_CORE`,  `Error while downloading video! Name: ${err.name} | Message: ${err.message}`)
                 Connections[userID].send(`DOWNLOAD_ERROR|${err.message.split(":")[0]}|${err.message}`)
 
                 ErrorOccured = true;
+
+                const updateType: YoutubeUpdateType = "VIDEO_ERROR"
+
+                var updateData: YoutubeDownloadUpdate = {
+                    downloadID: DownloadID,
+                    updateType: updateType,
+                    isError: ErrorOccured,
+                    data: {err: err.message.split(":")[0]},
+                }
+    
+                sendMessageToClient("event-message", ["DOWNLOAD_UPDATE", updateData])
+
             })
         }
 
         // Download Audio
         ytdl(`http://youtube.com/watch?v=${vid}`, { quality: "highestaudio", filter: (format) => { return format.mimeType.includes("video/mp4") && format.hasAudio } }).pipe(fs.createWriteStream(`${LYTDir}/temp/${tempFileName}_A.mp4`)).on('finish', () => {
+            
             AudioDownloaded = true
 
             CLog("YTDL_CORE", "Audio Download Complete!")
 
             HandleVideo()
+
+            const updateType: YoutubeUpdateType = "AUDIO_DOWNLOADED"
+
+            var updateData: YoutubeDownloadUpdate = {
+                downloadID: DownloadID,
+                updateType: updateType,
+                data: {},
+            }
+
+            sendMessageToClient("event-message", ["DOWNLOAD_UPDATE", updateData])
+
         }).on("error", (err) => {
+            
             if (ErrorOccured) return;
 
             CLog(`YTDL_CORE`, `Error while downloading audio! Name: ${err.name} | Message: ${err.message}`)
             Connections[userID].send(`DOWNLOAD_ERROR|${err.message.split(":")[0]}|${err.message}`)
 
             ErrorOccured = true;
+
+            const updateType: YoutubeUpdateType = "AUDIO_ERROR"
+
+            var updateData: YoutubeDownloadUpdate = {
+                downloadID: DownloadID,
+                updateType: updateType,
+                isError: ErrorOccured,
+                data: {err: err.message.split(":")[0]},
+            }
+
+            sendMessageToClient("event-message", ["DOWNLOAD_UPDATE", updateData])
+
         })
     },
 }

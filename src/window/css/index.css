@@ -1,0 +1,67 @@
+@import "util/properties.css";
+@import "util/animations.css";
+@import "util/electronUtil.css";
+@import "util/baseUtil.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.videoTitle {
+    line-height: 1em;
+}
+
+#Videos > div:nth-child(1) {
+    margin-top: .8em;
+}
+
+h1.ACCESS_GRANTED {
+    color: rgb(34 197 94) !important;
+    filter:drop-shadow(0 0 15px green) !important;
+    font-weight: 750;
+}
+
+.videoDisplay {
+    animation: gradientDirection 60s infinite;
+    background-image: linear-gradient(var(--gradient-angle), var(--gradient-from), var(--gradient-to));
+}
+
+#Littlepriceonu {
+    &:focus-visible {
+        outline:none;
+        border:#0752ad solid 2px;
+        filter:drop-shadow(0 0 10px blue)
+    }
+
+    &:hover {
+        outline: none;
+        border: #0752ad solid 2px;
+        filter: drop-shadow(0 0 10px blue)
+    }
+}
+
+.downloadProgress {
+    display: flex !important;
+
+    &[data-status="success"] {
+        @apply bg-green-600 drop-shadow-[0_0_5px_green]
+    }
+
+    &[data-status="inprogress"] {
+        @apply bg-orange-600
+    }
+
+    &[data-status="error"] {
+        @apply bg-red-600 drop-shadow-[0_0_5px_red]
+    } 
+}
+
+.progressCircle {
+    animation-fill-mode: forwards;
+    animation-timing-function: ease-in-out;
+    animation-duration: 1s;
+
+    background-image: conic-gradient(green 0deg var(--finished-progress), #c2410c 0deg 360deg);
+}
+
+/* radial-gradient(closest-side, #0F1729 79%, transparent 80% 100% ), conic-gradient(hotpink 75%, pink 0) */

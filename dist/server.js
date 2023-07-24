@@ -62,7 +62,7 @@ function createWindow() {
             symbolColor: "#ffffff"
         },
         webPreferences: {
-            preload: path.join(__dirname, 'window/preload.js')
+            preload: path.join(__dirname, 'window/preload.js'),
         },
         icon: path.join(LYTDir, "/imgs/icon.png"),
     });
@@ -74,11 +74,9 @@ function CLog(type, ...toLog) {
 function Log(...toLog) {
     console.log(`[${Region}]`, ...toLog);
 }
-if (fs.existsSync(path.join(LYTDir, "temp"))) {
-    fs.readdirSync(path.join(LYTDir, "temp")).forEach(file => {
-        fs.unlinkSync(path.join(LYTDir, `temp/${file}`));
-    });
-}
+fs.readdirSync(path.join(LYTDir, "temp")).forEach(file => {
+    fs.unlinkSync(path.join(LYTDir, `temp/${file}`));
+});
 const ContextMenu = electron.Menu.buildFromTemplate([
     { label: 'Show', click: function () {
             mainWindow.show();
@@ -153,6 +151,13 @@ const SocketHandlers = {
                     fs.unlinkSync(`${LYTDir}/temp/${tempFileName}_V.mp4`);
                     fs.unlinkSync(`${LYTDir}/temp/${tempFileName}_A.mp4`);
                     Connections[userID].send("DOWNLOAD_COMPLETE|");
+                    const updateType = "DOWNLOAD_COMPLETE";
+                    var updateData = {
+                        downloadID: DownloadID,
+                        updateType: updateType,
+                        data: {},
+                    };
+                    sendMessageToClient("event-message", ["DOWNLOAD_UPDATE", updateData]);
                     CLog("FFMPEG_MP4", "Video Complete!");
                 }).on("error", (err) => {
                     FFMPEGErrorHandlers.forEach(handler => handler(userID, err.toString()));
@@ -164,6 +169,13 @@ const SocketHandlers = {
                     .saveToFile(fullDir).on('end', () => {
                     fs.unlinkSync(`${LYTDir}/temp/${tempFileName}_A.mp4`);
                     Connections[userID].send("DOWNLOAD_COMPLETE|");
+                    const updateType = "DOWNLOAD_COMPLETE";
+                    var updateData = {
+                        downloadID: DownloadID,
+                        updateType: updateType,
+                        data: {},
+                    };
+                    sendMessageToClient("event-message", ["DOWNLOAD_UPDATE", updateData]);
                     CLog("FFMPEG_MP3", "Audio Complete!");
                 }).on("error", (err) => {
                     FFMPEGErrorHandlers.forEach(handler => handler(userID, err.toString()));
@@ -186,24 +198,54 @@ const SocketHandlers = {
                 VideoDownloaded = true;
                 CLog("YTDL_CORE", "Video Download Complete!");
                 HandleVideo();
+                const updateType = "VIDEO_DOWNLOADED";
+                var updateData = {
+                    downloadID: DownloadID,
+                    updateType: updateType,
+                    data: {},
+                };
+                sendMessageToClient("event-message", ["DOWNLOAD_UPDATE", updateData]);
             }).on("error", (err) => {
                 if (ErrorOccured)
                     return;
                 CLog(`YTDL_CORE`, `Error while downloading video! Name: ${err.name} | Message: ${err.message}`);
                 Connections[userID].send(`DOWNLOAD_ERROR|${err.message.split(":")[0]}|${err.message}`);
                 ErrorOccured = true;
+                const updateType = "VIDEO_ERROR";
+                var updateData = {
+                    downloadID: DownloadID,
+                    updateType: updateType,
+                    isError: ErrorOccured,
+                    data: { err: err.message.split(":")[0] },
+                };
+                sendMessageToClient("event-message", ["DOWNLOAD_UPDATE", updateData]);
             });
         }
         ytdl(`http://youtube.com/watch?v=${vid}`, { quality: "highestaudio", filter: (format) => { return format.mimeType.includes("video/mp4") && format.hasAudio; } }).pipe(fs.createWriteStream(`${LYTDir}/temp/${tempFileName}_A.mp4`)).on('finish', () => {
             AudioDownloaded = true;
             CLog("YTDL_CORE", "Audio Download Complete!");
             HandleVideo();
+            const updateType = "AUDIO_DOWNLOADED";
+            var updateData = {
+                downloadID: DownloadID,
+                updateType: updateType,
+                data: {},
+            };
+            sendMessageToClient("event-message", ["DOWNLOAD_UPDATE", updateData]);
         }).on("error", (err) => {
             if (ErrorOccured)
                 return;
             CLog(`YTDL_CORE`, `Error while downloading audio! Name: ${err.name} | Message: ${err.message}`);
             Connections[userID].send(`DOWNLOAD_ERROR|${err.message.split(":")[0]}|${err.message}`);
             ErrorOccured = true;
+            const updateType = "AUDIO_ERROR";
+            var updateData = {
+                downloadID: DownloadID,
+                updateType: updateType,
+                isError: ErrorOccured,
+                data: { err: err.message.split(":")[0] },
+            };
+            sendMessageToClient("event-message", ["DOWNLOAD_UPDATE", updateData]);
         });
     },
 };

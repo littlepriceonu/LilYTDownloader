@@ -10,7 +10,7 @@
 
     <script defer src="renderer.js"></script>
 
-    <link rel="stylesheet" href="LYT.css">
+    <link rel="stylesheet" href="index.css">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,27 +32,25 @@
             </div>
 
             <div id="Videos" class="w-full h-[95%] absolute -z-10 opacity-0 flex flex-col items-center justify-start space-y-1">
+                
                 <div class="videoDisplay w-[calc(100%_-_1em)] h-14 bg-transparent flex flex-col p-2 cursor-pointer bg-teal-950 rounded-md drop-shadow-[0_2.5px_5px_black]">
                     <div class="flex flex-row">
                         <img src="" alt="Thumbnail" class="videoThumbnail h-11 mr-2">
                         
-                        <div class="flex flex-col items-start justify-start">
+                        <div class="flex flex-col items-start justify-start w-full">
                             <h1 class="text-sm leading-[1.1em] font-roboto overflow-clip videoTitle scrollbar-track-slate-900 scrollbar-thumb-slate-950 scrollbar scrollbar-w-1.5 scrollbar-track-rounded-lg scrollbar-thumb-rounded-lg h-8 text-ellipsis flex justify-center items-start">Loading...</h1>
                             
-                            <div class="flex flex-row items-center justify-start">
-                                <div data-status="success" class="downloadProgress transition-all duration-300 relative top-[-2px] xl:top-[-7px] w-4 h-4 rounded-full fa fa-xs fa-exclamation flex items-center justify-center">
+                            <div class="flex flex-row items-center w-full justify-end pr-[1rem]">
+                                <div data-status="success" class="downloadProgress transition-all duration-300 relative top-[-2px] xl:top-[-7px] w-4 h-4 rounded-full fa fa-xs flex items-center justify-center">
                                 </div>
 
-                                <div class="ml-[10px] fa fa-headphones relative top-[-2px] xl:top-[-7px]">
+                                <div class="typeIndicator ml-[10px] fa relative top-[-2px] xl:top-[-7px]">
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- <div class="flex flex-row text-sm">
-                        <p class="videoId">ID: Loading...</p>
-                    </div> -->
                 </div>
+
             </div>
             
             <div id="NothingsHereYet" class="w-full h-[95%] flex flex-col justify-center items-center -z-10 ContentActive text-xs text-gray-500 opacity-0 select-none">
@@ -74,10 +72,32 @@
                 </div>
             </div>
             
-            <div id="Info" class="w-full h-full absolute -z-10 opacity-0 transition-[opacity] duration-500 flex flex-col items-center justify-center">
-                <h1 class="text-xl">
-                    Info!
-                </h1>
+            <div id="Info" class="w-full h-full absolute -z-10 opacity-0 transition-[opacity] duration-500 flex flex-col items-center">
+                <div class="flex flex-row justify-center items-center mt-6 pl-10 w-full">
+                    <img class="aspect-video w-32" src="https://i.ytimg.com/vi/lHZwlzOUOZ4/hqdefault.jpg?sqp=-oaymwEcCNACELwBSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLDPQuXeHaS8R2hZSgRzLiOskHiziQ" alt="Thumbnail">
+                    <h1 class="text-xl text-left w-[calc(100%-6rem)] pl-6 pr-6" id="InfoVideoTitle">
+                        Tailwind CSS is the worst…
+                    </h1>
+                </div>
+                
+                <div class="w-full h-[85%] flex flex-row">
+                    <div class="w-[50%] h-full">
+                        <div class=" w-full h-52 pt-14 pl-12 flex flex-row">
+                            <div class="progressCircle aspect-square w-32 h-32 rounded-full bg-orange-700">
+                            </div>
+
+                            <div>
+                                <div>
+                                    <h1 class="font-bold text-[1.2rem] whitespace-nowrap">Installing Video & Audio...</h1>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="w-[50%] h-full">
+
+                    </div>
+                </div>
             </div>
 
             <div id="Settings" class="w-full h-full absolute -z-10 opacity-0 transition-[opacity] duration-500 flex flex-col items-center justify-center">

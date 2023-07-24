@@ -1,4 +1,4 @@
-import { LYTSetting, YoutubeDownloadRequest as YoutubeDownloadData } from "./LYT"
+import { LYTSetting, YoutubeDownloadRequest as YoutubeDownloadData, YoutubeDownloadUpdate } from "./LYT"
 
 const _Region = "RENDERER"
 
@@ -59,6 +59,12 @@ const DownloadTypeIconMap = {
     "MP3": "fa-headphones"
 }
 
+const DownloadedPartsMap = {
+    "VIDEO_DOWNLOADED": "Video",
+    "AUDIO_DOWNLOADED": "Audio",
+    "DOWNLOAD_COMPLETE": "FinalOutput"
+}
+
 var CurrentInfoID: string;
 
 var RegisteredSettings: {[settingID: string]: LYTSetting} = {
@@ -85,6 +91,14 @@ function Log_(...toLog: any[]) {
     console.log(`[${_Region}]`, ...toLog)
 }
 
+function getVideoTypeIconFromID(id: `${string}-${string}-${string}-${string}-${string}`): HTMLDivElement {
+    return document.querySelector(`#${id} > div > div > div > div.typeIndicator`)
+}
+
+function getVideoProgressIconFromID(id: `${string}-${string}-${string}-${string}-${string}`): HTMLDivElement {
+    return document.querySelector(`#${id} > div > div > div > div.downloadProgress`)
+}
+
 function addVideoToSidebar(data: YoutubeDownloadData) {
     var newVideoDisplay = videoDisplay.cloneNode(true) as HTMLDivElement
     newVideoDisplay.id = data.downloadID
@@ -98,6 +112,7 @@ function addVideoToSidebar(data: YoutubeDownloadData) {
 
     var title = document.querySelector(`#${data.downloadID} > div > div > .videoTitle`) as HTMLHeadingElement
 
+    // Old Vibrant Thing
     //window.Vibrant.from(thumbnail.src).quality(1).clearFilters().getPalette().then((palette: any) => {
     //    const StartingRGB = palette.Vibrant.rgb;
     //    const StartingColor = `rgba(${StartingRGB[0].toString()}, ${StartingRGB[1].toString()}, ${StartingRGB[2].toString()}, 0.7)`;
@@ -113,6 +128,9 @@ function addVideoToSidebar(data: YoutubeDownloadData) {
     //    CLog_("VIBRANT", palette)
     //});
 
+    getVideoTypeIconFromID(data.downloadID).classList.add(DownloadTypeIconMap[data.type])
+
+    getVideoProgressIconFromID(data.downloadID).setAttribute("data-status", "inprogress")
     
     window.IPC.invokeInfoRequest(data.vid).then( videoData => {
         CLog_("INVOKE_INFO_REQUEST", videoData)
@@ -161,6 +179,7 @@ function RegisterSetting(setting: LYTSetting) {
 var access = 0
 var granted = false
 
+// triple click on pfp
 Array.from(document.getElementsByTagName("a")).forEach((el: HTMLAnchorElement) => {
     el.onclick = (e) => {
         const isMe = el.id == "Littlepriceonu"
@@ -228,6 +247,15 @@ InfoTab.onclick = () => {
 //#region Main Functionality
 
 window.IPC.subscribeToEvent("DOWNLOAD_REQUESTED", (data: YoutubeDownloadData) => {
+    data.type == "MP3" ? data.partsDownloaded = {
+        Audio: false,
+        FinalOutput: false
+    } : data.partsDownloaded = {
+        Video: false,
+        Audio: false,
+        FinalOutput: false,
+    }
+
     Downloads[data.downloadID] = data
 
     addVideoToSidebar(data)
@@ -236,7 +264,28 @@ window.IPC.subscribeToEvent("DOWNLOAD_REQUESTED", (data: YoutubeDownloadData) =>
     Videos.classList.add("ContentActive")
 })
 
+window.IPC.subscribeToEvent("DOWNLOAD_UPDATE", (data: YoutubeDownloadUpdate) => {
+    if (!data.updateType) throw new Error("DOWNLOAD_UPDATE did not have an updateType");
 
+    Downloads[data.downloadID].updates ? Downloads[data.downloadID].updates.push(data) : Downloads[data.downloadID].updates = [data]
+
+    if (data.isError) {
+        getVideoProgressIconFromID(data.downloadID).classList.add(StatusIconMap["error"])
+        getVideoProgressIconFromID(data.downloadID).setAttribute("data-status", "error")
+        Downloads[data.downloadID].hasErrored = true
+        Downloads[data.downloadID].error = data.data.error
+    }
+
+    if (!Downloads[data.downloadID].hasErrored && data.updateType == "DOWNLOAD_COMPLETE") {
+        getVideoProgressIconFromID(data.downloadID).classList.add(StatusIconMap["success"])
+        getVideoProgressIconFromID(data.downloadID).setAttribute("data-status", "success")
+        Downloads[data.downloadID].hasFinished = true
+    }
+
+    if (DownloadedPartsMap[data.updateType]) {
+        Downloads[data.downloadID].partsDownloaded[DownloadedPartsMap[data.updateType]] = true
+    }
+})
 
 //#endregion
 

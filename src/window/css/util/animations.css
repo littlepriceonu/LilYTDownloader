@@ -1,0 +1,44 @@
+@keyframes gradientDirection {
+    0% {
+        --gradient-angle: 45deg
+    }
+
+    50% {
+        --gradient-angle: 315deg;
+    }
+
+    100% {
+        --gradient-angle: 44deg
+    }
+}
+
+
+@keyframes finishedProgress1 {
+    0% {
+        --finished-progress: var(--finished-progress)
+    }
+
+    100% {
+        --finished-progress: 120deg
+    }
+}
+
+@keyframes finishedProgress2 {
+    0% {
+        --finished-progress: var(--finished-progress)
+    }
+
+    100% {
+        --finished-progress: 240deg
+    }
+}
+
+@keyframes finishedProgress3 {
+    0% {
+        --finished-progress: var(--finished-progress)
+    }
+
+    100% {
+        --finished-progress: 360deg
+    }
+}

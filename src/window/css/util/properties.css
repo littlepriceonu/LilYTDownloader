@@ -1,0 +1,28 @@
+@property --gradient-from {
+    syntax: "<color>";
+    initial-value: #123c70;
+    inherits: false;
+}
+
+@property --gradient-to {
+    syntax: "<color>";
+    initial-value: #59a3ff;
+    inherits: false;
+}
+
+@property --gradient-angle {
+    syntax: "<angle>";
+    initial-value: 45deg;
+    inherits: false;
+}
+
+@property --finished-progress {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
+}
+
+:root {
+    --gradient-from: red;
+    --gradient-to: blue;
+}
