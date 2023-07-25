@@ -27,12 +27,13 @@ var Connections = {};
 const PORT = 5020;
 const YTSocket = new ws.WebSocketServer({ port: PORT });
 const FFMPEGErrorHandlers = [
-    function (userID, err) {
+    function (userID, downloadID, err) {
         err = err.replaceAll("\n", "");
         CLog("FFMPEG_ERR", err);
         console.log(err.includes("Invalid argument"));
         if (err.includes("Invalid argument")) {
             Connections[userID].send("DOWNLOAD_ERROR|INVALID_ARGUMENT|FFMPEG detected an invalid file name argument");
+            sendEventToClient("DOWNLOAD_UPDATE", { downloadID: downloadID, isError: true, updateType: "FFMPEG_ERROR", data: "INVALID_ARGUMENT" });
         }
     },
 ];
@@ -49,6 +50,9 @@ function removeLastDirFromString(dir, separator) {
 }
 function sendMessageToClient(type, data) {
     mainWindow.webContents.send(type, data);
+}
+function sendEventToClient(type, data) {
+    sendMessageToClient('event-message', [type, data]);
 }
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -104,7 +108,7 @@ const SocketHandlers = {
     "DEBUG": function (userID, msg, ..._) {
         CLog(`CLIENT_${userID}`, `${msg}`);
     },
-    "DOWNLOAD_VIDEO": function (userID, vid, fileName, dir, type, ..._) {
+    "DOWNLOAD_VIDEO": async function (userID, vid, fileName, dir, type, ..._) {
         if (!appReady) {
             CLog('YTDL_CORE', `Download Requested but App is not loaded!`);
         }
@@ -127,7 +131,7 @@ const SocketHandlers = {
             error: "",
         };
         Downloads[DownloadID] = downloadData;
-        sendMessageToClient("event-message", ["DOWNLOAD_REQUESTED", downloadData]);
+        sendEventToClient("DOWNLOAD_REQUESTED", downloadData);
         const tempFileName = randomUUID();
         var AudioDownloaded = false;
         var VideoDownloaded = false;
@@ -155,12 +159,12 @@ const SocketHandlers = {
                     var updateData = {
                         downloadID: DownloadID,
                         updateType: updateType,
-                        data: {},
+                        data: { size: fs.statSync(fullDir).size / (1024 * 1024) },
                     };
-                    sendMessageToClient("event-message", ["DOWNLOAD_UPDATE", updateData]);
+                    sendEventToClient("DOWNLOAD_UPDATE", updateData);
                     CLog("FFMPEG_MP4", "Video Complete!");
                 }).on("error", (err) => {
-                    FFMPEGErrorHandlers.forEach(handler => handler(userID, err.toString()));
+                    FFMPEGErrorHandlers.forEach(handler => handler(userID, DownloadID, err.toString()));
                 });
             }
             else {
@@ -173,12 +177,12 @@ const SocketHandlers = {
                     var updateData = {
                         downloadID: DownloadID,
                         updateType: updateType,
-                        data: {},
+                        data: { size: fs.statSync(fullDir).size / (1024 * 1024) },
                     };
-                    sendMessageToClient("event-message", ["DOWNLOAD_UPDATE", updateData]);
+                    sendEventToClient("DOWNLOAD_UPDATE", updateData);
                     CLog("FFMPEG_MP3", "Audio Complete!");
                 }).on("error", (err) => {
-                    FFMPEGErrorHandlers.forEach(handler => handler(userID, err.toString()));
+                    FFMPEGErrorHandlers.forEach(handler => handler(userID, DownloadID, err.toString()));
                 });
             }
         }
@@ -204,7 +208,7 @@ const SocketHandlers = {
                     updateType: updateType,
                     data: {},
                 };
-                sendMessageToClient("event-message", ["DOWNLOAD_UPDATE", updateData]);
+                sendEventToClient("DOWNLOAD_UPDATE", updateData);
             }).on("error", (err) => {
                 if (ErrorOccured)
                     return;
@@ -218,7 +222,7 @@ const SocketHandlers = {
                     isError: ErrorOccured,
                     data: { err: err.message.split(":")[0] },
                 };
-                sendMessageToClient("event-message", ["DOWNLOAD_UPDATE", updateData]);
+                sendEventToClient("DOWNLOAD_UPDATE", updateData);
             });
         }
         ytdl(`http://youtube.com/watch?v=${vid}`, { quality: "highestaudio", filter: (format) => { return format.mimeType.includes("video/mp4") && format.hasAudio; } }).pipe(fs.createWriteStream(`${LYTDir}/temp/${tempFileName}_A.mp4`)).on('finish', () => {
@@ -231,7 +235,7 @@ const SocketHandlers = {
                 updateType: updateType,
                 data: {},
             };
-            sendMessageToClient("event-message", ["DOWNLOAD_UPDATE", updateData]);
+            sendEventToClient("DOWNLOAD_UPDATE", updateData);
         }).on("error", (err) => {
             if (ErrorOccured)
                 return;
@@ -245,7 +249,7 @@ const SocketHandlers = {
                 isError: ErrorOccured,
                 data: { err: err.message.split(":")[0] },
             };
-            sendMessageToClient("event-message", ["DOWNLOAD_UPDATE", updateData]);
+            sendEventToClient("DOWNLOAD_UPDATE", updateData);
         });
     },
 };

@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const _Region = "RENDERER";
 const videoDisplay = document.getElementsByClassName('videoDisplay').item(0);
 videoDisplay.remove();
-const ThumbNailString = "https://i.ytimg.com/vi/[ID]/default.jpg?sqp=-oaymwEcCNACELwBSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLDPQuXeHaS8R2hZSgRzLiOskHiziQ";
+const ThumbNailString = "https://i.ytimg.com/vi/[ID]/maxresdefault.jpg";
 const ErrorMap = {
     "EPREM": "No Permission To Create This File!",
     "EISDIR": "File Name Invalid!",
@@ -26,6 +26,9 @@ const TabIndicator = document.getElementById("TabIndicator");
 const SettingsHolder = document.getElementById("SettingsHolder");
 const SettingTemplate = document.getElementsByClassName("Setting").item(0);
 SettingTemplate.remove();
+const DownloadLocation = document.getElementById("DownloadLocation");
+const DownloadSize = document.getElementById("DownloadSize");
+const DownloadVID = document.getElementById("DownloadVID");
 TabIndicator.style.top = `${(TabIndicator.parentElement.getBoundingClientRect().height - TabIndicator.getBoundingClientRect().height) / 2}px`;
 var currentTab = HomeTab;
 const TabMap = {
@@ -128,12 +131,9 @@ function UpdateProgressBar(PartsFinished, TotalParts) {
 }
 function GetProgressTextFromFinishedParts(PartsFinished, DownloadID) {
     var ProgressText = "Progress Text Error!";
-    var ProgressToText = "";
+    var ProgressToText;
+    Downloads[DownloadID].type == "MP3" ? ProgressToText = "Video_" : ProgressToText = "";
     Object.entries(PartsFinished).forEach(part => {
-        if (part[0] == "Audio" && Downloads[DownloadID].type == "MP3") {
-            ProgressToText += "Audio_";
-            return;
-        }
         part[1] ? ProgressToText += part[0] : ProgressToText += `!${part[0]}`;
         ProgressToText += "_";
     });
@@ -192,11 +192,11 @@ InfoTab.onclick = () => {
     UpdateSelectedTab(InfoTab);
 };
 window.IPC.subscribeToEvent("DOWNLOAD_REQUESTED", (data) => {
-    data.type == "MP3" ? data.partsDownloaded = {
-        Audio: false,
-        FinalOutput: false
-    } : data.partsDownloaded = {
+    data.type == "MP4" ? data.partsDownloaded = {
         Video: false,
+        Audio: false,
+        FinalOutput: false,
+    } : data.partsDownloaded = {
         Audio: false,
         FinalOutput: false,
     };
@@ -217,11 +217,14 @@ window.IPC.subscribeToEvent("DOWNLOAD_UPDATE", (data) => {
         getVideoProgressIconFromID(data.downloadID).setAttribute("data-status", "error");
         Downloads[data.downloadID].hasErrored = true;
         Downloads[data.downloadID].error = data.data.error;
+        document.getElementById("ProgressText").innerText = "An Error Occured: ";
     }
     if (!Downloads[data.downloadID].hasErrored && data.updateType == "DOWNLOAD_COMPLETE") {
         getVideoProgressIconFromID(data.downloadID).classList.add(StatusIconMap["success"]);
         getVideoProgressIconFromID(data.downloadID).setAttribute("data-status", "success");
         Downloads[data.downloadID].hasFinished = true;
+        CLog_("DOWNLOAD_FINISHED", data.data);
+        DownloadSize.innerText = `${Math.round(data.data.size)}mbs`;
     }
     if (DownloadedPartsMap[data.updateType]) {
         Downloads[data.downloadID].partsDownloaded[DownloadedPartsMap[data.updateType]] = true;

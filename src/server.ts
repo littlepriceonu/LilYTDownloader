@@ -18,7 +18,7 @@ const Menu = electron.Menu
 const Tray = electron.Tray
 import ffmpegPath = require("@ffmpeg-installer/ffmpeg")
 import ffmpeg = require('fluent-ffmpeg')
-import { YoutubeDownloadRequest, YoutubeDownloadUpdate, YoutubeUpdateType } from './window/LYT'
+import { ServerEventData, YoutubeDownloadRequest, YoutubeDownloadUpdate, YoutubeEventType, YoutubeUpdateType } from './window/LYT'
 ffmpeg.setFfmpegPath(ffmpegPath.path)
 
 // TODO
@@ -38,7 +38,8 @@ ffmpeg.setFfmpegPath(ffmpegPath.path)
 //  Confetti if on info screen and download finishes (maybe... ?)
 //  Add a little indicator that tells the user if the server has any open websocket connects to tell weither its connected properly or not
 //  Tell the user the current version of LYT in the home page and maybe some other fun facts that cycle or something
-//  
+//  Add a clear button to clear the side bar
+//  Add ability to cancel download
 
 const Username = os.userInfo().username
 
@@ -55,7 +56,7 @@ const PORT = 5020
 const YTSocket = new ws.WebSocketServer({ port: PORT })
 
 const FFMPEGErrorHandlers = [
-    function (userID: string, err: string) {
+    function (userID: string, downloadID: `${string}-${string}-${string}-${string}-${string}`, err: string) {
         err = err.replaceAll("\n", "")
         CLog("FFMPEG_ERR", err)
 
@@ -63,6 +64,8 @@ const FFMPEGErrorHandlers = [
 
         if (err.includes("Invalid argument")) {
             Connections[userID].send("DOWNLOAD_ERROR|INVALID_ARGUMENT|FFMPEG detected an invalid file name argument")
+
+            sendEventToClient("DOWNLOAD_UPDATE", {downloadID: downloadID, isError: true, updateType: "FFMPEG_ERROR", data: "INVALID_ARGUMENT"})
         }
     },
 ]
@@ -87,8 +90,12 @@ function removeLastDirFromString(dir: string[] | string, separator: string) {
     return dir
 }
 
-function sendMessageToClient(type: string, data: any) {
+function sendMessageToClient(type: string, data: [type: string, data: YoutubeDownloadUpdate | YoutubeDownloadRequest]) {
     mainWindow.webContents.send(type, data)
+}
+
+function sendEventToClient(type: YoutubeEventType, data: YoutubeDownloadUpdate | YoutubeDownloadRequest) {
+    sendMessageToClient('event-message', [type, data])
 }
 
 function createWindow() {
@@ -165,7 +172,7 @@ const SocketHandlers = {
     "DEBUG": function (userID: string, msg: string, ..._: string[]) {
         CLog(`CLIENT_${userID}`, `${msg}`)
     },
-    "DOWNLOAD_VIDEO": function (userID: string, vid: string, fileName: string, dir: string, type: "MP4"|"MP3", ..._: string[]) {
+    "DOWNLOAD_VIDEO": async function (userID: string, vid: string, fileName: string, dir: string, type: "MP4"|"MP3", ..._: string[]) {
         if (!appReady) {CLog('YTDL_CORE', `Download Requested but App is not loaded!`)}
         if (!ytdl.validateID(vid)) { CLog(`YTDL_CORE`, `Video ID ${vid} is invalid`); return; }
 
@@ -189,7 +196,7 @@ const SocketHandlers = {
 
         Downloads[DownloadID] = downloadData
 
-        sendMessageToClient("event-message", ["DOWNLOAD_REQUESTED", downloadData])
+        sendEventToClient("DOWNLOAD_REQUESTED", downloadData)
 
         const tempFileName = randomUUID()
 
@@ -229,15 +236,15 @@ const SocketHandlers = {
                         var updateData: YoutubeDownloadUpdate = {
                             downloadID: DownloadID,
                             updateType: updateType,
-                            data: {},
+                            data: {size: fs.statSync(fullDir).size / (1024*1024)},
                         }
             
-                        sendMessageToClient("event-message", ["DOWNLOAD_UPDATE", updateData])
+                        sendEventToClient("DOWNLOAD_UPDATE", updateData)
 
                         CLog("FFMPEG_MP4", "Video Complete!")
                     }).on("error", (err) => {
                         // If an error happened, run all the handlers, which will fix something (maybe) and let the client know
-                        FFMPEGErrorHandlers.forEach(handler => handler(userID, err.toString()))
+                        FFMPEGErrorHandlers.forEach(handler => handler(userID, DownloadID, err.toString()))
                     })
             }
             else {
@@ -256,15 +263,15 @@ const SocketHandlers = {
                         var updateData: YoutubeDownloadUpdate = {
                             downloadID: DownloadID,
                             updateType: updateType,
-                            data: {},
+                            data: {size: fs.statSync(fullDir).size / (1024*1024)},
                         }
-            
-                        sendMessageToClient("event-message", ["DOWNLOAD_UPDATE", updateData])
+
+                        sendEventToClient("DOWNLOAD_UPDATE", updateData)
 
                         CLog("FFMPEG_MP3", "Audio Complete!")
                     }).on("error", (err) => {
                         // If an error happened, run all the handlers, which will fix something (maybe) and let the client know
-                        FFMPEGErrorHandlers.forEach(handler => handler(userID, err.toString()))
+                        FFMPEGErrorHandlers.forEach(handler => handler(userID, DownloadID, err.toString()))
                     })
             }
         }
@@ -282,6 +289,8 @@ const SocketHandlers = {
             }
         }
 
+        
+        
         // Download Video
         if (type == "MP4") {
             ytdl(`http://youtube.com/watch?v=${vid}`, { quality: "highestvideo", filter: (format) => { return format.mimeType.includes("video/mp4") && format.hasVideo } }).pipe(fs.createWriteStream(`${LYTDir}/temp/${tempFileName}_V.mp4`)).on('finish', () => {
@@ -300,7 +309,7 @@ const SocketHandlers = {
                     data: {},
                 }
     
-                sendMessageToClient("event-message", ["DOWNLOAD_UPDATE", updateData])
+                sendEventToClient("DOWNLOAD_UPDATE", updateData)
 
             }).on("error", (err) => {
 
@@ -320,7 +329,7 @@ const SocketHandlers = {
                     data: {err: err.message.split(":")[0]},
                 }
     
-                sendMessageToClient("event-message", ["DOWNLOAD_UPDATE", updateData])
+                sendEventToClient("DOWNLOAD_UPDATE", updateData)
 
             })
         }
@@ -342,7 +351,7 @@ const SocketHandlers = {
                 data: {},
             }
 
-            sendMessageToClient("event-message", ["DOWNLOAD_UPDATE", updateData])
+            sendEventToClient("DOWNLOAD_UPDATE", updateData)
 
         }).on("error", (err) => {
             
@@ -362,7 +371,7 @@ const SocketHandlers = {
                 data: {err: err.message.split(":")[0]},
             }
 
-            sendMessageToClient("event-message", ["DOWNLOAD_UPDATE", updateData])
+            sendEventToClient("DOWNLOAD_UPDATE", updateData)
 
         })
     },

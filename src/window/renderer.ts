@@ -5,7 +5,7 @@ const _Region = "RENDERER"
 const videoDisplay = document.getElementsByClassName('videoDisplay').item(0)
 videoDisplay.remove()
 
-const ThumbNailString = "https://i.ytimg.com/vi/[ID]/default.jpg?sqp=-oaymwEcCNACELwBSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLDPQuXeHaS8R2hZSgRzLiOskHiziQ"
+const ThumbNailString = "https://i.ytimg.com/vi/[ID]/maxresdefault.jpg"
 
 const ErrorMap = {
     "EPREM": "No Permission To Create This File!",
@@ -37,6 +37,10 @@ const TabIndicator = <HTMLDivElement>document.getElementById("TabIndicator")
 const SettingsHolder = <HTMLDivElement>document.getElementById("SettingsHolder")
 const SettingTemplate = <HTMLDivElement>document.getElementsByClassName("Setting").item(0)
 SettingTemplate.remove()
+
+const DownloadLocation = <HTMLDivElement>document.getElementById("DownloadLocation")
+const DownloadSize = <HTMLDivElement>document.getElementById("DownloadSize")
+const DownloadVID = <HTMLDivElement>document.getElementById("DownloadVID")
 
 TabIndicator.style.top = `${(TabIndicator.parentElement.getBoundingClientRect().height-TabIndicator.getBoundingClientRect().height)/2}px`
 
@@ -211,15 +215,21 @@ function UpdateProgressBar(PartsFinished: number, TotalParts: number): [HTMLDivE
     return [DownloadProgressBar, (PartsFinished == TotalParts)]
 }
 
+/**
+ * Gets the text to describe what is currently occuring within a download (i.e. "Downloading Audio & Video", "Finalizing Download...", "Download Complete", etc.)
+ * @param `PartsFinished` Parts of a download that have finsished.
+ * @param `DownloadID` The ID of the download
+ * @returns `ProgressText` The Progress Text for the current amount downloaded
+ */
 function GetProgressTextFromFinishedParts(PartsFinished: DownloadedParts, DownloadID: `${string}-${string}-${string}-${string}-${string}`): string {
     // if the text doesn't get assigned lmfao
     var ProgressText = "Progress Text Error!"
 
-    var ProgressToText = ""
+    var ProgressToText: string;
+
+    Downloads[DownloadID].type == "MP3" ? ProgressToText = "Video_" : ProgressToText = ""
 
     Object.entries(PartsFinished).forEach(part => {
-        if (part[0] == "Audio" && Downloads[DownloadID].type == "MP3") {ProgressToText += "Audio_"; return;}
-
         part[1] ? ProgressToText += part[0] : ProgressToText += `!${part[0]}` 
 
         ProgressToText += "_"
@@ -307,11 +317,11 @@ InfoTab.onclick = () => {
 //#region Main Functionality
 
 window.IPC.subscribeToEvent("DOWNLOAD_REQUESTED", (data: YoutubeDownloadData) => {
-    data.type == "MP3" ? data.partsDownloaded = {
-        Audio: false,
-        FinalOutput: false
-    } : data.partsDownloaded = {
+    data.type == "MP4" ? data.partsDownloaded = {
         Video: false,
+        Audio: false,
+        FinalOutput: false,
+    } : data.partsDownloaded = {
         Audio: false,
         FinalOutput: false,
     }
@@ -320,6 +330,7 @@ window.IPC.subscribeToEvent("DOWNLOAD_REQUESTED", (data: YoutubeDownloadData) =>
 
     const sidebarVideo = addVideoToSidebar(data)
 
+    // TODO work on this
     sidebarVideo.onclick = () => {
         
     }
@@ -336,19 +347,27 @@ window.IPC.subscribeToEvent("DOWNLOAD_UPDATE", (data: YoutubeDownloadUpdate) => 
 
     Downloads[data.downloadID].updates ? Downloads[data.downloadID].updates.push(data) : Downloads[data.downloadID].updates = [data]
 
-    // sets the little icon on the sidebar to a little exclamation point and make the icon red if the download errors
+    // if the update is telling us the download errored
     if (data.isError) {
+        // sets the little icon on the sidebar to a little exclamation point and make the icon red if the download errors
         getVideoProgressIconFromID(data.downloadID).classList.add(StatusIconMap["error"])
         getVideoProgressIconFromID(data.downloadID).setAttribute("data-status", "error")
         Downloads[data.downloadID].hasErrored = true
         Downloads[data.downloadID].error = data.data.error
+
+        document.getElementById("ProgressText").innerText = "An Error Occured: "
     }
 
-    // sets the little icon on the sidebar to a little check and makes the icon green if the download is complete
+    // if the update is telling up the update is done
     if (!Downloads[data.downloadID].hasErrored && data.updateType == "DOWNLOAD_COMPLETE") {
+        // sets the little icon on the sidebar to a little check and makes the icon green if the download is complete
         getVideoProgressIconFromID(data.downloadID).classList.add(StatusIconMap["success"])
         getVideoProgressIconFromID(data.downloadID).setAttribute("data-status", "success")
         Downloads[data.downloadID].hasFinished = true
+
+        CLog_("DOWNLOAD_FINISHED", data.data)
+
+        DownloadSize.innerText = `${Math.round(data.data.size)}mbs` 
     }
 
     // if its info about how far the download has progressed
