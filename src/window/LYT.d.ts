@@ -26,15 +26,17 @@ export interface IPC {
      * @param event The event to subscribe to
      * @param callback 
      */
-    subscribeToEvent(event: YoutubeEventType, callback: Function): undefined,
+    subscribeToEvent(event: ServerEventType, callback: Function): undefined,
 }
+
+export type LYTDownloadID = `${string}-${string}-${string}-${string}-${string}`
 
 /**
  * Types of download updates
  */
 export type YoutubeUpdateType = "AUDIO_DOWNLOADED" | "AUDIO_ERROR" | "VIDEO_DOWNLOADED" | "VIDEO_ERROR" | "DOWNLOAD_COMPLETE" | "FFMPEG_ERROR"
 
-export type YoutubeEventType = "DOWNLOAD_UPDATE" | "DOWNLOAD_REQUESTED"
+export type ServerEventType = "DOWNLOAD_UPDATE" | "DOWNLOAD_REQUESTED" | "DEBUG_MESSAGE"
 
 /**
  * Data sent with a download update
@@ -59,7 +61,7 @@ export type DownloadedParts = {
  * Data that can be recieved from the server
  */
 export interface ServerEventData {
-    downloadID: `${string}-${string}-${string}-${string}-${string}`,
+    downloadID: LYTDownloadID,
 }
 
 /**
@@ -77,6 +79,8 @@ export interface YoutubeDownloadRequest extends ServerEventData {
     updates?: YoutubeUpdates,
     partsDownloaded?: DownloadedParts,
     downloadSize?: number,
+    videoTitle?: string,
+    videoAuthor?: string,
 }
 
 /**
@@ -99,4 +103,4 @@ export interface LYTSetting {
     eventCallback: Function[],
 } 
 
-export type ServerEvent = [type: YoutubeEventType, data: ServerEventData]
+export type ServerEvent = [type: ServerEventType, data: ServerEventData]

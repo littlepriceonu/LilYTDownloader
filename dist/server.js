@@ -17,6 +17,16 @@ const Tray = electron.Tray;
 const ffmpegPath = require("@ffmpeg-installer/ffmpeg");
 const ffmpeg = require("fluent-ffmpeg");
 ffmpeg.setFfmpegPath(ffmpegPath.path);
+var LYTDir = removeLastDirFromString(__dirname, "\\");
+if (LYTDir.includes("app.asar")) {
+    while (!LYTDir.endsWith("lilytdownloader")) {
+        LYTDir = removeLastDirFromString(LYTDir, "/");
+    }
+}
+if (require("electron-squirrel-startup")) {
+    process.exit(1);
+}
+var forceClose = false;
 const Username = os.userInfo().username;
 var mainWindow;
 const DirMap = {
@@ -38,7 +48,9 @@ const FFMPEGErrorHandlers = [
     },
 ];
 var appReady = false;
-const LYTDir = removeLastDirFromString(__dirname, "\\");
+if (!fs.existsSync(LYTDir + "/temp")) {
+    fs.mkdirSync(LYTDir + "/temp");
+}
 const Region = "SERVER";
 var Downloads = {};
 var tray;
@@ -86,6 +98,7 @@ const ContextMenu = electron.Menu.buildFromTemplate([
             mainWindow.show();
         } },
     { label: 'Quit', click: function () {
+            forceClose = true;
             app.quit();
         } }
 ]);
@@ -116,6 +129,9 @@ const SocketHandlers = {
             CLog(`YTDL_CORE`, `Video ID ${vid} is invalid`);
             return;
         }
+        sendEventToClient("DEBUG_MESSAGE", __dirname);
+        sendEventToClient("DEBUG_MESSAGE", LYTDir);
+        sendEventToClient("DEBUG_MESSAGE", removeLastDirFromString(removeLastDirFromString(__dirname, "\\"), "/"));
         var DownloadID = randomUUID();
         DownloadID = DownloadID.replace(DownloadID.charAt(0), "LYT");
         const __dir = DirMap[dir];
@@ -274,9 +290,17 @@ YTSocket.on('connection', function (con) {
     Connections[id] = con;
     con.send(`CLIENT_ID|${id}`);
 });
+YTSocket.on("error", (e) => {
+    if (e.message.includes("EADDRINUSE")) {
+        CLog("EADDRINUSE", "Another LYT is already open!");
+        process.exit(1);
+    }
+});
 app.whenReady().then(() => {
     createWindow();
     mainWindow.on("close", (e) => {
+        if (forceClose)
+            return;
         e.preventDefault();
         mainWindow.hide();
     });
@@ -300,6 +324,7 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         YTSocket.close();
+        forceClose = true;
         app.quit();
     }
 });

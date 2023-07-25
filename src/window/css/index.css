@@ -22,8 +22,8 @@ h1.ACCESS_GRANTED {
 }
 
 .videoDisplay {
-    animation: gradientDirection 60s infinite;
-    background-image: linear-gradient(var(--gradient-angle), var(--gradient-from), var(--gradient-to));
+    /* animation: gradientDirection 60s infinite;
+    background-image: linear-gradient(var(--gradient-angle), var(--gradient-from), var(--gradient-to)); */
 }
 
 #Littlepriceonu {

@@ -1,7 +1,3 @@
-// Old imports from module
-// import { fileURLToPath } from 'url';
-// import path from 'path';
-
 import ytdl = require('ytdl-core')
 import fs = require('fs')
 import ws = require('ws')
@@ -18,7 +14,7 @@ const Menu = electron.Menu
 const Tray = electron.Tray
 import ffmpegPath = require("@ffmpeg-installer/ffmpeg")
 import ffmpeg = require('fluent-ffmpeg')
-import { ServerEventData, YoutubeDownloadRequest, YoutubeDownloadUpdate, YoutubeEventType, YoutubeUpdateType } from './window/LYT'
+import { ServerEventData, YoutubeDownloadRequest, YoutubeDownloadUpdate, ServerEventType, YoutubeUpdateType } from './window/LYT'
 ffmpeg.setFfmpegPath(ffmpegPath.path)
 
 // TODO
@@ -40,6 +36,19 @@ ffmpeg.setFfmpegPath(ffmpegPath.path)
 //  Tell the user the current version of LYT in the home page and maybe some other fun facts that cycle or something
 //  Add a clear button to clear the side bar
 //  Add ability to cancel download
+//  Set it up so that when theres no user interaction after like 5 minutes it switches back to the home tab
+
+var LYTDir = removeLastDirFromString(__dirname, "\\")
+
+if (LYTDir.includes("app.asar")) {
+    while (!LYTDir.endsWith("lilytdownloader")) {
+        LYTDir = removeLastDirFromString(LYTDir, "/")
+    }
+}
+
+if (require("electron-squirrel-startup")) {process.exit(1)}
+
+var forceClose = false
 
 const Username = os.userInfo().username
 
@@ -72,7 +81,10 @@ const FFMPEGErrorHandlers = [
 
 var appReady = false;
 
-const LYTDir = removeLastDirFromString(__dirname, "\\")
+// im actually a schizo istg I wrote this exact line like a month ago
+if (!fs.existsSync(LYTDir + "/temp")) {
+    fs.mkdirSync(LYTDir + "/temp")
+}
 
 const Region = "SERVER"
 
@@ -90,11 +102,11 @@ function removeLastDirFromString(dir: string[] | string, separator: string) {
     return dir
 }
 
-function sendMessageToClient(type: string, data: [type: string, data: YoutubeDownloadUpdate | YoutubeDownloadRequest]) {
+function sendMessageToClient(type: string, data: [type: string, data: YoutubeDownloadUpdate | YoutubeDownloadRequest | string]) {
     mainWindow.webContents.send(type, data)
 }
 
-function sendEventToClient(type: YoutubeEventType, data: YoutubeDownloadUpdate | YoutubeDownloadRequest) {
+function sendEventToClient(type: ServerEventType, data: YoutubeDownloadUpdate | YoutubeDownloadRequest | string) {
     sendMessageToClient('event-message', [type, data])
 }
 
@@ -144,6 +156,7 @@ const ContextMenu = electron.Menu.buildFromTemplate([
         mainWindow.show();
     } },
     { label: 'Quit', click:  function(){
+        forceClose = true
         app.quit()
     } }
 ]);
@@ -175,6 +188,10 @@ const SocketHandlers = {
     "DOWNLOAD_VIDEO": async function (userID: string, vid: string, fileName: string, dir: string, type: "MP4"|"MP3", ..._: string[]) {
         if (!appReady) {CLog('YTDL_CORE', `Download Requested but App is not loaded!`)}
         if (!ytdl.validateID(vid)) { CLog(`YTDL_CORE`, `Video ID ${vid} is invalid`); return; }
+
+        sendEventToClient("DEBUG_MESSAGE", __dirname)
+        sendEventToClient("DEBUG_MESSAGE", LYTDir)
+        sendEventToClient("DEBUG_MESSAGE", removeLastDirFromString(removeLastDirFromString(__dirname, "\\"), "/"))
 
         var DownloadID = randomUUID()
         DownloadID = <`${string}-${string}-${string}-${string}-${string}`>DownloadID.replace(DownloadID.charAt(0), "LYT")
@@ -410,12 +427,20 @@ YTSocket.on('connection', function (con) {
 
 })
 
+YTSocket.on("error", (e) => {
+    if (e.message.includes("EADDRINUSE")) {
+        CLog("EADDRINUSE", "Another LYT is already open!")
+        process.exit(1)
+    }
+})
+
 app.whenReady().then(() => {
     createWindow()
 
     mainWindow.on("close", (e) => {
+        if (forceClose) return
+        
         e.preventDefault()
-
         mainWindow.hide()
     })
 
@@ -446,6 +471,8 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         YTSocket.close()
+
+        forceClose = true
         app.quit()
     }
 })

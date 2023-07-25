@@ -1,4 +1,4 @@
-import { DownloadedParts, LYTSetting, YoutubeDownloadRequest as YoutubeDownloadData, YoutubeDownloadUpdate } from "./LYT"
+import { DownloadedParts, LYTDownloadID, LYTSetting, YoutubeDownloadRequest as YoutubeDownloadData, YoutubeDownloadUpdate } from "./LYT"
 
 const _Region = "RENDERER"
 
@@ -41,6 +41,9 @@ SettingTemplate.remove()
 const DownloadLocation = <HTMLDivElement>document.getElementById("DownloadLocation")
 const DownloadSize = <HTMLDivElement>document.getElementById("DownloadSize")
 const DownloadVID = <HTMLDivElement>document.getElementById("DownloadVID")
+const VideoTitle = <HTMLHeadingElement>document.getElementById("VideoTitle")
+const VideoAuthor = <HTMLHeadingElement>document.getElementById("VideoAuthor")
+const ProgressText = <HTMLDivElement>document.getElementById("ProgressText")
 
 TabIndicator.style.top = `${(TabIndicator.parentElement.getBoundingClientRect().height-TabIndicator.getBoundingClientRect().height)/2}px`
 
@@ -103,11 +106,11 @@ function Log_(...toLog: any[]) {
     console.log(`[${_Region}]`, ...toLog)
 }
 
-function getVideoTypeIconFromID(id: `${string}-${string}-${string}-${string}-${string}`): HTMLDivElement {
+function getVideoTypeIconFromID(id: LYTDownloadID): HTMLDivElement {
     return document.querySelector(`#${id} > div > div > div > div.typeIndicator`)
 }
 
-function getVideoProgressIconFromID(id: `${string}-${string}-${string}-${string}-${string}`): HTMLDivElement {
+function getVideoProgressIconFromID(id: LYTDownloadID): HTMLDivElement {
     return document.querySelector(`#${id} > div > div > div > div.downloadProgress`)
 }
 
@@ -153,6 +156,13 @@ function addVideoToSidebar(data: YoutubeDownloadData): HTMLDivElement {
         CLog_("INVOKE_INFO_REQUEST", videoData)
 
         title.innerText = videoData.videoDetails.title
+        Downloads[data.downloadID].videoTitle = videoData.videoDetails.title
+        Downloads[data.downloadID].videoAuthor = videoData.videoDetails.author.name
+
+        if (CurrentInfoID == data.downloadID) {
+            VideoTitle.innerText = videoData.videoDetails.title
+            VideoAuthor.innerText = videoData.videoDetails.author.name
+        }
     })
 
     return newVideoDisplay
@@ -181,6 +191,9 @@ function UpdateSelectedTab(tabSelected: HTMLDivElement) {
 function RegisterSetting(setting: LYTSetting) {
     if (RegisteredSettings[setting.settingID]) {CLog_("REGISTER_SETTING", `Setting ${setting.settingID} has already been registered!`); return;}
 
+    document.querySelector("#Settings > div:nth-child(1)").classList.remove("ContentActive")
+    Settings.classList.add("ContentActive")
+
     const newSetting = <HTMLDivElement>SettingTemplate.cloneNode(true)
     newSetting.id = setting.settingID
 
@@ -197,6 +210,8 @@ function RegisterSetting(setting: LYTSetting) {
     }
 
     RegisteredSettings[setting.settingID] = setting 
+
+    SettingsHolder.append(newSetting)
 }
 
 /**
@@ -221,7 +236,7 @@ function UpdateProgressBar(PartsFinished: number, TotalParts: number): [HTMLDivE
  * @param `DownloadID` The ID of the download
  * @returns `ProgressText` The Progress Text for the current amount downloaded
  */
-function GetProgressTextFromFinishedParts(PartsFinished: DownloadedParts, DownloadID: `${string}-${string}-${string}-${string}-${string}`): string {
+function getProgressTextFromFinishedParts(PartsFinished: DownloadedParts, DownloadID: LYTDownloadID): string {
     // if the text doesn't get assigned lmfao
     var ProgressText = "Progress Text Error!"
 
@@ -240,6 +255,51 @@ function GetProgressTextFromFinishedParts(PartsFinished: DownloadedParts, Downlo
     ProgressText = ProgressTextMap[ProgressToText]
 
     return ProgressText
+}
+
+/**
+ * Sets the info screen to display info of the requested ID
+ * @param `downloadID` The ID of a download to display data on
+ */
+function setInfoVideo(downloadID: LYTDownloadID) {
+    DownloadVID.innerText = Downloads[downloadID].vid
+    DownloadLocation.innerText = Downloads[downloadID].fullDir
+    Downloads[downloadID].downloadSize ? DownloadSize.innerText = `${Downloads[downloadID].downloadSize}mbs` : DownloadSize.innerText = "Downloading..."
+
+    const Thumbnail = <HTMLImageElement>document.getElementById("Thumbnail")
+    Thumbnail.src = ThumbNailString.replace("[ID]", Downloads[downloadID].vid)
+
+    Downloads[downloadID].videoTitle ? VideoTitle.innerText = Downloads[downloadID].videoTitle : VideoTitle.innerText = "Loading..."
+    Downloads[downloadID].videoAuthor ? VideoAuthor.innerText = Downloads[downloadID].videoAuthor : VideoAuthor.innerText = "Loading..."
+
+    var parts = getPartsData(Downloads[downloadID].partsDownloaded)
+
+    UpdateProgressBar(parts[0], parts[1])
+    
+    ProgressText.innerText = getProgressTextFromFinishedParts(Downloads[downloadID].partsDownloaded, downloadID)
+
+    UpdateSelectedTab(InfoTab)
+}
+
+/**
+ * Gets `PartsFinished` & `TotalParts` for {@link UpdateProgressBar}
+ * @param partsDownloaded Parts of a video that has been downloaded
+ * @returns `PartsFinished`, `TotalParts`
+ */
+function getPartsData(partsDownloaded: DownloadedParts): [number, number] {
+
+    var parts: number = 0
+    var totalParts: number = 0
+
+    Object.entries(partsDownloaded).forEach(part => {
+        totalParts += 1
+
+        if (part[1] == true) {
+            parts += 1
+        }
+    })
+    
+    return [parts, totalParts]
 }
 
 //#endregion
@@ -330,9 +390,12 @@ window.IPC.subscribeToEvent("DOWNLOAD_REQUESTED", (data: YoutubeDownloadData) =>
 
     const sidebarVideo = addVideoToSidebar(data)
 
-    // TODO work on this
     sidebarVideo.onclick = () => {
-        
+        document.querySelector("#Info > div:nth-child(1)").classList.remove("ContentActive")
+        Info.classList.add("ContentActive")
+
+        CurrentInfoID = data.downloadID
+        setInfoVideo(data.downloadID)
     }
 
     NothingsHereYet.classList.remove("ContentActive")
@@ -355,7 +418,7 @@ window.IPC.subscribeToEvent("DOWNLOAD_UPDATE", (data: YoutubeDownloadUpdate) => 
         Downloads[data.downloadID].hasErrored = true
         Downloads[data.downloadID].error = data.data.error
 
-        document.getElementById("ProgressText").innerText = "An Error Occured: "
+        document.getElementById("ProgressText").innerText = `An Error Occured: ${data.data.err}`
     }
 
     // if the update is telling up the update is done
@@ -374,26 +437,20 @@ window.IPC.subscribeToEvent("DOWNLOAD_UPDATE", (data: YoutubeDownloadUpdate) => 
     if (DownloadedPartsMap[data.updateType]) {
         Downloads[data.downloadID].partsDownloaded[DownloadedPartsMap[data.updateType]] = true
 
-        //if (CurrentInfoID == data.downloadID) {
-            const ProgressText = <HTMLDivElement>document.getElementById("ProgressText")
+        if (CurrentInfoID == data.downloadID) {
             const partsDownloaded = Downloads[data.downloadID].partsDownloaded 
 
-            ProgressText.innerText = GetProgressTextFromFinishedParts(partsDownloaded, data.downloadID)
+            ProgressText.innerText = getProgressTextFromFinishedParts(partsDownloaded, data.downloadID)
 
-            var parts: number = 0
-            var totalParts: number = 0
+            var parts = getPartsData(partsDownloaded)
 
-            Object.entries(partsDownloaded).forEach(part => {
-                totalParts += 1
-
-                if (part[1] == true) {
-                    parts += 1
-                }
-            })
-
-            CLog_("PROGRESS_BAR", UpdateProgressBar(parts, totalParts))
-        //}
+            CLog_("PROGRESS_BAR", UpdateProgressBar(parts[0], parts[1]))
+        }
     }
+})
+
+window.IPC.subscribeToEvent("DEBUG_MESSAGE", (message: string) => {
+    CLog_("SERVER", message)
 })
 
 //#endregion

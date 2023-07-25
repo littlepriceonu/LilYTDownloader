@@ -1,18 +1,21 @@
 {
-  "name": "lilytdownloader",
-  "version": "1.0.0",
+  "name": "LilYTDownloader",
+  "displayName": "LilYTDownloader",
+  "version": "0.1.0",
   "description": "A lil youtube downloader",
   "main": "./dist/server.js",
   "type": "commonjs",
   "scripts": {
     "build": "build",
-    "start": "electron ."
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/littlepriceonu/LilYTDownloader.git"
   },
-  "author": "Littlepriceonu#0001",
+  "author": "Littlepriceonu",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/littlepriceonu/LilYTDownloader/issues"
@@ -21,7 +24,7 @@
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@vibrant/types": "^3.2.1-alpha.1",
-    "electron": "^25.2.0",
+    "electron-squirrel-startup": "^1.0.0",
     "fluent-ffmpeg": "^2.1.2",
     "nodemon": "^2.0.22",
     "postcss-advanced-variables": "^3.0.1",
@@ -31,10 +34,17 @@
     "ytdl-core": "^4.11.5"
   },
   "devDependencies": {
+    "@electron-forge/cli": "^6.2.1",
+    "@electron-forge/maker-deb": "^6.2.1",
+    "@electron-forge/maker-rpm": "^6.2.1",
+    "@electron-forge/maker-squirrel": "^6.2.1",
+    "@electron-forge/maker-zip": "^6.2.1",
+    "@electron-forge/plugin-auto-unpack-natives": "^6.2.1",
     "@types/fluent-ffmpeg": "^2.1.21",
     "@types/node": "^20.3.1",
     "@types/ws": "^8.5.5",
     "cssnano": "^6.0.1",
+    "electron": "^25.3.1",
     "eslint": "^8.43.0",
     "eslint-config-semistandard": "^17.0.0",
     "eslint-config-standard": "^17.1.0",

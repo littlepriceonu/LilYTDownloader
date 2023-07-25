@@ -2,9 +2,13 @@
 
 ## ❓ What Is LilYTDownloader?
 
-LilYTDownloader (or LYT for short) is a node.js server that comes with a youtube userscript that adds a download button to youtube which downloads the video on your local machine using the LYT Server.
+LilYTDownloader is a windows app that lets you download youtube videos free of hassle on your own network, ignoring forced network limitations from websites.
 
 ## 🏃‍♂️ How do I use LYT?
 
-* npm install --save @ffmpeg-installer/ffmpeg
-* 
+! LilYTDownloader is still in beta !
+
+* Download the latest release from the releases page
+* Install a userscript extension on your browser, something like `tampermonkey`
+* Copy everything in the `userscript.js` and paste it into a new script than hit CTRL + S
+* Have fun downloading!
