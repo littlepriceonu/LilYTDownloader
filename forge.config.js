@@ -8,7 +8,8 @@ module.exports = {
     {
       name: '@electron-forge/maker-squirrel',
       config: {
-        setupIcon: "/imgs/app.ico"
+        iconUrl: "https://raw.githubusercontent.com/littlepriceonu/LilYTDownloader/main/imgs/app.ico",
+        setupIcon: "/imgs/app.ico",
       },
     },
     {
