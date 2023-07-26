@@ -9,8 +9,10 @@ LilYTDownloader (or LYT for short) is a Windows app that lets you download youtu
 
 #### LYT runs in the background when you close the window, to fully close LYT open the Windows tray and right click on the LYT icon then hit `quit`
 
+#### LYT doesn't support Brave, this is due to brave blocking localhost websocket connections   
+
 * Download the latest release from the releases page.
-* Run the setup (Windows may stop you from running, this is because the LYT installer is unsigned, to sign LYT would cost 459$ a year. To continue, hit see more then "Run anyway").
+* Run the setup (Windows may stop you from running, this is because the LYT installer is unsigned, to sign LYT would cost 459$ a year. To continue, hit "More info" then "Run anyway").
 * If LYT doesn't open after the installation, open your Windows start menu and search for "LilYTDownloader".
 * Install a userscript extension on your browser, something like [`tampermonkey`](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo).
 * Install [`the userscript`](https://github.com/littlepriceonu/LilYTDownloader/raw/main/userscript/LYT.user.js).
