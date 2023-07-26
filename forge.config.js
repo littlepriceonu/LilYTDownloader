@@ -1,15 +1,18 @@
 module.exports = {
   packagerConfig: {
-    asar: true,
-    icon: "/imgs/app",
+    asar: {
+      unpack: "**/*.exe"
+    },
+    icon: "./imgs/icon",
   },
   rebuildConfig: {},
   makers: [
     {
       name: '@electron-forge/maker-squirrel',
       config: {
-        iconUrl: "https://raw.githubusercontent.com/littlepriceonu/LilYTDownloader/main/imgs/app.ico",
-        setupIcon: "/imgs/app.ico",
+        iconUrl: "https://raw.githubusercontent.com/littlepriceonu/LilYTDownloader/main/imgs/icon.ico",
+        setupIcon: "./imgs/icon.ico",
+        title: "LilYTDownloader",
       },
     },
     {

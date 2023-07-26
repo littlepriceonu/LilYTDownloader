@@ -7,10 +7,12 @@ LilYTDownloader is a windows app that lets you download youtube videos free of h
 
 ### ! LilYTDownloader is still in beta !
 
+#### LYT runs in the background when you close the window, to fully close LYT open the windows tray and right click on the LYT icon then hit `quit`
+
 * Download the latest release from the releases page
 * Install a userscript extension on your browser, something like [`tampermonkey`](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)
 * Copy everything in the [`userscript.js`](https://github.com/littlepriceonu/LilYTDownloader/blob/main/userscript/LYT.user.js) and paste it into a new script than hit CTRL + S
-* Have fun downloading!
+* Start downloading!
 
 ## 🎥 Contributing
 

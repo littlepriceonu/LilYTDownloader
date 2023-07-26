@@ -8,7 +8,6 @@
 // @icon         https://www.google.com/s2/favicons?domain=youtube.com
 // @homepage     https://github.com/littlepriceonu/LilYTDownloader
 // @grant        none
-
 // ==/UserScript==
 
 (function() {

@@ -12,15 +12,23 @@ const ipcMain = electron.ipcMain
 const shell = electron.shell
 const Menu = electron.Menu
 const Tray = electron.Tray
-import ffmpegPath = require("@ffmpeg-installer/ffmpeg")
+const ffmpegPath = require('ffmpeg-static').replace(
+    'app.asar',
+    'app.asar.unpacked'
+);
+const ffprobePath = require('ffprobe-static').path.replace(
+    'app.asar',
+    'app.asar.unpacked'
+);
 import ffmpeg = require('fluent-ffmpeg')
-import { ServerEventData, YoutubeDownloadRequest, YoutubeDownloadUpdate, ServerEventType, YoutubeUpdateType } from './window/LYT'
-ffmpeg.setFfmpegPath(ffmpegPath.path)
+import { YoutubeDownloadRequest, YoutubeDownloadUpdate, ServerEventType, YoutubeUpdateType } from './window/LYT'
+ffmpeg.setFfmpegPath(ffmpegPath)
+ffmpeg.setFfprobePath(ffprobePath)
 
 // TODO
 // Install entire playlists to a folder
 // set up heartbeats on the server & client so I can kill dead client connections
-// Track 
+// Track downloads to show stats or sum??
 // 
 // Userscript:
 //  Folder Select (?)
@@ -37,6 +45,8 @@ ffmpeg.setFfmpegPath(ffmpegPath.path)
 //  Add a clear button to clear the side bar
 //  Add ability to cancel download
 //  Set it up so that when theres no user interaction after like 5 minutes it switches back to the home tab
+//  Limit download location's width
+//  Implement progress from ffmpeg telling the app the size of the file
 
 var LYTDir = removeLastDirFromString(__dirname, "\\")
 
@@ -69,12 +79,13 @@ const FFMPEGErrorHandlers = [
         err = err.replaceAll("\n", "")
         CLog("FFMPEG_ERR", err)
 
-        console.log(err.includes("Invalid argument"))
-
         if (err.includes("Invalid argument")) {
             Connections[userID].send("DOWNLOAD_ERROR|INVALID_ARGUMENT|FFMPEG detected an invalid file name argument")
 
             sendEventToClient("DOWNLOAD_UPDATE", {downloadID: downloadID, isError: true, updateType: "FFMPEG_ERROR", data: "INVALID_ARGUMENT"})
+        }
+        else {
+            sendEventToClient("DOWNLOAD_UPDATE", {downloadID: downloadID, isError: true, updateType: "FFMPEG_ERROR", data: err})
         }
     },
 ]
@@ -262,6 +273,15 @@ const SocketHandlers = {
                     }).on("error", (err) => {
                         // If an error happened, run all the handlers, which will fix something (maybe) and let the client know
                         FFMPEGErrorHandlers.forEach(handler => handler(userID, DownloadID, err.toString()))
+                    }).on("progress", (d) => {
+                        sendEventToClient("DOWNLOAD_UPDATE", {
+                            updateType: "SIZE_UPDATE",
+                            downloadID: DownloadID,
+                            // ffmpeg puts it in kb so we dont gotta divide it by 1024*1024
+                            data: {size: d.targetSize / 1024}
+                        })
+
+                        sendEventToClient("DEBUG_MESSAGE", `${d.frames.toString()} frames processed by FFMPEG`)
                     })
             }
             else {

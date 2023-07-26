@@ -14,9 +14,11 @@ const ipcMain = electron.ipcMain;
 const shell = electron.shell;
 const Menu = electron.Menu;
 const Tray = electron.Tray;
-const ffmpegPath = require("@ffmpeg-installer/ffmpeg");
+const ffmpegPath = require('ffmpeg-static').replace('app.asar', 'app.asar.unpacked');
+const ffprobePath = require('ffprobe-static').path.replace('app.asar', 'app.asar.unpacked');
 const ffmpeg = require("fluent-ffmpeg");
-ffmpeg.setFfmpegPath(ffmpegPath.path);
+ffmpeg.setFfmpegPath(ffmpegPath);
+ffmpeg.setFfprobePath(ffprobePath);
 var LYTDir = removeLastDirFromString(__dirname, "\\");
 if (LYTDir.includes("app.asar")) {
     while (!LYTDir.endsWith("lilytdownloader")) {
@@ -40,10 +42,12 @@ const FFMPEGErrorHandlers = [
     function (userID, downloadID, err) {
         err = err.replaceAll("\n", "");
         CLog("FFMPEG_ERR", err);
-        console.log(err.includes("Invalid argument"));
         if (err.includes("Invalid argument")) {
             Connections[userID].send("DOWNLOAD_ERROR|INVALID_ARGUMENT|FFMPEG detected an invalid file name argument");
             sendEventToClient("DOWNLOAD_UPDATE", { downloadID: downloadID, isError: true, updateType: "FFMPEG_ERROR", data: "INVALID_ARGUMENT" });
+        }
+        else {
+            sendEventToClient("DOWNLOAD_UPDATE", { downloadID: downloadID, isError: true, updateType: "FFMPEG_ERROR", data: err });
         }
     },
 ];
@@ -181,6 +185,13 @@ const SocketHandlers = {
                     CLog("FFMPEG_MP4", "Video Complete!");
                 }).on("error", (err) => {
                     FFMPEGErrorHandlers.forEach(handler => handler(userID, DownloadID, err.toString()));
+                }).on("progress", (d) => {
+                    sendEventToClient("DOWNLOAD_UPDATE", {
+                        updateType: "SIZE_UPDATE",
+                        downloadID: DownloadID,
+                        data: { size: d.targetSize / 1024 }
+                    });
+                    sendEventToClient("DEBUG_MESSAGE", `${d.frames.toString()} frames processed by FFMPEG`);
                 });
             }
             else {

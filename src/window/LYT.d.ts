@@ -34,7 +34,7 @@ export type LYTDownloadID = `${string}-${string}-${string}-${string}-${string}`
 /**
  * Types of download updates
  */
-export type YoutubeUpdateType = "AUDIO_DOWNLOADED" | "AUDIO_ERROR" | "VIDEO_DOWNLOADED" | "VIDEO_ERROR" | "DOWNLOAD_COMPLETE" | "FFMPEG_ERROR"
+export type YoutubeUpdateType = "AUDIO_DOWNLOADED" | "AUDIO_ERROR" | "VIDEO_DOWNLOADED" | "VIDEO_ERROR" | "DOWNLOAD_COMPLETE" | "FFMPEG_ERROR" | "SIZE_UPDATE"
 
 export type ServerEventType = "DOWNLOAD_UPDATE" | "DOWNLOAD_REQUESTED" | "DEBUG_MESSAGE"
 
