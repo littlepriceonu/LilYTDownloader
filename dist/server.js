@@ -21,7 +21,7 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath);
 var LYTDir = removeLastDirFromString(__dirname, "\\");
 if (LYTDir.includes("app.asar")) {
-    while (!LYTDir.endsWith("lilytdownloader")) {
+    while (!LYTDir.endsWith("LilYTDownloader")) {
         LYTDir = removeLastDirFromString(LYTDir, "/");
     }
 }
@@ -133,9 +133,7 @@ const SocketHandlers = {
             CLog(`YTDL_CORE`, `Video ID ${vid} is invalid`);
             return;
         }
-        sendEventToClient("DEBUG_MESSAGE", __dirname);
-        sendEventToClient("DEBUG_MESSAGE", LYTDir);
-        sendEventToClient("DEBUG_MESSAGE", removeLastDirFromString(removeLastDirFromString(__dirname, "\\"), "/"));
+        sendEventToClient("DEBUG_MESSAGE", `LYTDir: ${LYTDir}`);
         var DownloadID = randomUUID();
         DownloadID = DownloadID.replace(DownloadID.charAt(0), "LYT");
         const __dir = DirMap[dir];
@@ -326,7 +324,7 @@ app.whenReady().then(() => {
     Object.entries(IPCInvokeHandlers).forEach(handler => {
         ipcMain.handle(handler[0], handler[1]);
     });
-    tray = new Tray(electron.nativeImage.createFromPath(path.join(LYTDir, "imgs/icon.png")));
+    tray = new Tray(electron.nativeImage.createFromPath(removeLastDirFromString(__dirname, "\\") + "/imgs/icon.png"));
     tray.setContextMenu(ContextMenu);
     tray.setToolTip("LilYTDownloader");
     tray.setTitle("LilYTDownloader");

@@ -3,6 +3,7 @@ module.exports = {
     asar: {
       unpack: "**/*.exe"
     },
+    executableName: "LilYTDownloader",
     icon: "./imgs/icon",
   },
   rebuildConfig: {},

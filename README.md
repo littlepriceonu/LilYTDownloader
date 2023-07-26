@@ -1,18 +1,20 @@
 # 🎥 LilYTDownloader
 
-LilYTDownloader is a windows app that lets you download youtube videos free of hassle on your own network, ignoring forced network limitations from websites.
+LilYTDownloader (or LYT for short) is a Windows app that lets you download youtube videos free of hassle on your own network, ignoring forced network limitations from websites.
 
 
 ## 🏃‍♂️ How do I use LYT?
 
 ### ! LilYTDownloader is still in beta !
 
-#### LYT runs in the background when you close the window, to fully close LYT open the windows tray and right click on the LYT icon then hit `quit`
+#### LYT runs in the background when you close the window, to fully close LYT open the Windows tray and right click on the LYT icon then hit `quit`
 
-* Download the latest release from the releases page
-* Install a userscript extension on your browser, something like [`tampermonkey`](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)
-* Copy everything in the [`userscript.js`](https://github.com/littlepriceonu/LilYTDownloader/blob/main/userscript/LYT.user.js) and paste it into a new script than hit CTRL + S
-* Start downloading!
+* Download the latest release from the releases page.
+* Run the setup (Windows may stop you from running, this is because the LYT installer is unsigned, to sign LYT would cost 459$ a year. To continue, hit see more then "Run anyway").
+* If LYT doesn't open after the installation, open your Windows start menu and search for "LilYTDownloader".
+* Install a userscript extension on your browser, something like [`tampermonkey`](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo).
+* Copy everything in the [`userscript.js`](https://github.com/littlepriceonu/LilYTDownloader/blob/main/userscript/LYT.user.js) and paste it into a new script than hit CTRL + S.
+* Open a youtube video tab, right next to the subscribe button will be a *save* button, click this to open the LYT userscript GUI (this GUI is in *very* early stages of development, so it may not look the best).
 
 ## 🎥 Contributing
 

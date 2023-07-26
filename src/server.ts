@@ -33,6 +33,7 @@ ffmpeg.setFfprobePath(ffprobePath)
 // Userscript:
 //  Folder Select (?)
 //  Quality Select
+//  Shorts Support
 //
 // Server:
 //  Quality Support
@@ -51,7 +52,7 @@ ffmpeg.setFfprobePath(ffprobePath)
 var LYTDir = removeLastDirFromString(__dirname, "\\")
 
 if (LYTDir.includes("app.asar")) {
-    while (!LYTDir.endsWith("lilytdownloader")) {
+    while (!LYTDir.endsWith("LilYTDownloader")) {
         LYTDir = removeLastDirFromString(LYTDir, "/")
     }
 }
@@ -200,9 +201,7 @@ const SocketHandlers = {
         if (!appReady) {CLog('YTDL_CORE', `Download Requested but App is not loaded!`)}
         if (!ytdl.validateID(vid)) { CLog(`YTDL_CORE`, `Video ID ${vid} is invalid`); return; }
 
-        sendEventToClient("DEBUG_MESSAGE", __dirname)
-        sendEventToClient("DEBUG_MESSAGE", LYTDir)
-        sendEventToClient("DEBUG_MESSAGE", removeLastDirFromString(removeLastDirFromString(__dirname, "\\"), "/"))
+        sendEventToClient("DEBUG_MESSAGE", `LYTDir: ${LYTDir}`)
 
         var DownloadID = randomUUID()
         DownloadID = <`${string}-${string}-${string}-${string}-${string}`>DownloadID.replace(DownloadID.charAt(0), "LYT")
@@ -479,7 +478,7 @@ app.whenReady().then(() => {
         ipcMain.handle(handler[0], handler[1])
     })
 
-    tray = new Tray(electron.nativeImage.createFromPath(path.join(LYTDir, "imgs/icon.png")))
+    tray = new Tray(electron.nativeImage.createFromPath(removeLastDirFromString(__dirname, "\\") + "/imgs/icon.png"))
     tray.setContextMenu(ContextMenu)
     tray.setToolTip("LilYTDownloader")
     tray.setTitle("LilYTDownloader")
