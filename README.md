@@ -22,7 +22,7 @@ LilYTDownloader (or LYT for short) is a Windows app that lets you download youtu
 
 * Go to your browsers extension settings and enable Developer Mode (if you're unsure how to do this, search "enable extension developer mode on [YOUR BROWSER HERE]")
 
-* Install the `extenstion.zip` from the releases page and unzip it, go to your browser's extension settings and hit "Load Unpacked" and select the unzipped folder.
+* Install the `extension.zip` from the releases page and unzip it, go to your browser's extension settings and hit "Load Unpacked" and select the unzipped folder.
 
 * Pin the extension (or don't 😔) and click on the extension.
 
