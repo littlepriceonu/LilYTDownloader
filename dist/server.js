@@ -195,6 +195,7 @@ const SocketHandlers = {
             else {
                 ffmpeg()
                     .addInput(`${LYTDir}/temp/${tempFileName}_A.mp4`)
+                    .outputOption(["-q:a 0", "-map a"])
                     .saveToFile(fullDir).on('end', () => {
                     fs.unlinkSync(`${LYTDir}/temp/${tempFileName}_A.mp4`);
                     Connections[userID].send("DOWNLOAD_COMPLETE|");

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LYT</title>
+    <script src="popup.js" type="module" defer></script>
+    <link rel="stylesheet" href="./index.css">
+</head>
+<body class="bg-slate-900 text-white">
+
+    <div class="relative w-[300px] h-[56px] mx-auto my-4">
+
+        <div id="NotYoutube" class="w-full h-full absolute top-0 left-0 transition-opacity ContentActive opacity-0 bg-slate-900 flex flex-col items-center justify-center text-xl mt-2">
+            <h1>😖</h1>
+            <h1>Current tab isn't Youtube!</h1>
+            <p class="text-xs">If it is, try reloading</p>
+        </div>
+
+        <div id="VideoDisplay" class="flex flex-row items-center justify-start w-[300px] absolute top-0 left-0 bg-slate-900 opacity-0">
+            <img id="Thumbnail" class="aspect-video w-20 mt-2 mx-4" src="https://i.ytimg.com/vi/lHZwlzOUOZ4/maxresdefault.jpg" alt="Video's Thumbnail">
+            <div class="flex flex-col items-center justify-start">
+                <h1 id="Title" class="text-sm h-6 pr-5 pt-2">
+                    Tailwind CSS is the worst...
+                </h1>
+                <h2 id="Author" class="text-xs text-gray-400 text-left w-full mt-6">Fireship</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex flex-col items-center justify-center">
+        <h1 class="w-40 pt-4 text-left z-10">File Type</h1>
+        <select name="Dir" class="transition-all bg-slate-800 outline-none w-40 mt-1 h-5 border border-transparent border-solid focus-visible:border-blue-600 focus-visible:drop-shadow-[0_0_15px_blue]" id="TypeInput">
+            <option value="MP4">Video</option>
+            <option value="MP3">Audio</option>
+        </select>
+
+
+        <h1 class="w-40 pt-4 text-left z-10">Directory</h1>
+        <select name="Dir" class="transition-all bg-slate-800 outline-none w-40 mt-1 h-5 border border-transparent border-solid focus-visible:border-blue-600 focus-visible:drop-shadow-[0_0_15px_blue]" id="DirectoryInput">
+            <option value="DOWNLOADS">Downloads</option>
+            <option value="CURRENT_USER">Current User</option>
+        </select>
+
+
+        <h1 class="w-40 pt-4 text-left z-10">File Name</h1>
+        <input autocomplete="off" class="transition-all indent-1 bg-slate-800 outline-none w-40 mt-1 h-5 border border-transparent border-solid focus-visible:border-blue-600 focus-visible:drop-shadow-[0_0_15px_blue]" id="FileNameInput" type="text">
+
+        <input class="mt-6 px-4 py-2 bg-blue-600 rounded-lg transition-all hover:drop-shadow-[0_0_15px_blue] active:scale-90" id="DownloadButton" type="button" value="Download">
+    </div>
+</div>
+
+</body>
+</html>

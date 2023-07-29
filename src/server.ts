@@ -21,22 +21,27 @@ const ffprobePath = require('ffprobe-static').path.replace(
     'app.asar.unpacked'
 );
 import ffmpeg = require('fluent-ffmpeg')
-import { YoutubeDownloadRequest, YoutubeDownloadUpdate, ServerEventType, YoutubeUpdateType } from './window/LYT'
+import { YoutubeDownloadRequest, YoutubeDownloadUpdate, ServerEventType, YoutubeUpdateType, DownloadFileName } from './window/LYT'
 ffmpeg.setFfmpegPath(ffmpegPath)
 ffmpeg.setFfprobePath(ffprobePath)
 
 // TODO
+// ! Important Todos
+// Implement info about what type the download is (probably using the icons from the sidebar)
+//
+// ---------------
 // Install entire playlists to a folder
 // set up heartbeats on the server & client so I can kill dead client connections
 // Track downloads to show stats or sum??
 // 
-// Userscript:
+// Extension:
 //  Folder Select (?)
 //  Quality Select
 //  Shorts Support
+//  Check if the same thing has been downloaded twice and show a warning if so
 //
 // Server:
-//  Quality Support
+//  Support
 //  Check if file exists, send message to client warning about overwrite
 //
 // App:
@@ -213,7 +218,7 @@ const SocketHandlers = {
         var downloadData: YoutubeDownloadRequest = {
             downloadID: DownloadID,
             vid: vid,
-            fileName: fileName,
+            fileName: fileName as DownloadFileName,
             dir: __dir,
             fullDir: fullDir,
             type: type,
@@ -287,6 +292,7 @@ const SocketHandlers = {
                 // https://superuser.com/questions/332347/how-can-i-convert-mp4-video-to-mp3-audio-with-ffmpeg
                 ffmpeg()
                     .addInput(`${LYTDir}/temp/${tempFileName}_A.mp4`)
+                    .outputOption(["-q:a 0", "-map a"])
                     .saveToFile(fullDir).on('end', () => {
                         // Delete the Audio temp vid
                         fs.unlinkSync(`${LYTDir}/temp/${tempFileName}_A.mp4`)

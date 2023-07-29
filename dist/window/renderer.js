@@ -264,6 +264,7 @@ window.IPC.subscribeToEvent("DOWNLOAD_UPDATE", (data) => {
         getVideoProgressIconFromID(data.downloadID).setAttribute("data-status", "success");
         Downloads[data.downloadID].hasFinished = true;
         CLog_("DOWNLOAD_FINISHED", data.data);
+        Downloads[data.downloadID].downloadSize = Math.round(data.data.size);
         DownloadSize.innerText = `${Math.round(data.data.size)}mbs`;
     }
     if (DownloadedPartsMap[data.updateType]) {

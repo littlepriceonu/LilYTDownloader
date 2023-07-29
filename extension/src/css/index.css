@@ -1,0 +1,7 @@
+@import "util/baseUtil.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {width: 350px; height: 325px; margin: 0;}

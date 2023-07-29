@@ -5,6 +5,53 @@ declare global {
         IPC: IPC;
         Vibrant: any;
     }
+
+    namespace Extension {
+        /**
+         * Socket message to be sent from the service worker that contains data relating to the download
+         * DOWNLOAD_VIDEO|`CLIENT_ID`|`vid`|`fileName`|`directory`|`type`
+         */
+        export type SocketDownloadRequest = `DOWNLOAD_VIDEO|${string}|${string}|${DownloadFileName}|${DownloadDirectory}|${DownloadFileType}`
+
+        /**
+         * The types of communication within the extension
+         */
+        export type CommunicationType = "DOWNLOAD_VIDEO" | "DOWNLOAD_COMPLETE" | "GET_VIDEO_INFO"
+    
+        /**
+         * Communication that happens between the `popup`, `service-worker`, & `content-scripts` within the extension
+         */
+        export type Communication = {
+            type: CommunicationType,
+            data: CommunicationData
+        }
+    
+        /**
+         * Data communcated within the extension
+         */
+        export type CommunicationData = any;
+    
+        /**
+         * A request from the `popup` to the `service-worker` that makes a download request to the LYT server
+         */
+        export interface DownloadRequest extends CommunicationData {
+            fileName: string,
+            directory: string,
+            type: DownloadFileType,
+            vid: string,
+        }
+    
+        export interface VideoInfoRequest extends CommunicationData {
+    
+        }
+
+        export interface VideoInfoResponse extends CommunicationData {
+            title: string,
+            vid: string,
+            author: string,
+        }
+    }
+    
 }
 
 /**
@@ -29,6 +76,9 @@ export interface IPC {
     subscribeToEvent(event: ServerEventType, callback: Function): undefined,
 }
 
+/**
+ * Random UUID for a LYT download
+ */
 export type LYTDownloadID = `${string}-${string}-${string}-${string}-${string}`
 
 /**
@@ -36,6 +86,9 @@ export type LYTDownloadID = `${string}-${string}-${string}-${string}-${string}`
  */
 export type YoutubeUpdateType = "AUDIO_DOWNLOADED" | "AUDIO_ERROR" | "VIDEO_DOWNLOADED" | "VIDEO_ERROR" | "DOWNLOAD_COMPLETE" | "FFMPEG_ERROR" | "SIZE_UPDATE"
 
+/**
+ * Types of events recieved from the LYT server
+ */
 export type ServerEventType = "DOWNLOAD_UPDATE" | "DOWNLOAD_REQUESTED" | "DEBUG_MESSAGE"
 
 /**
@@ -65,14 +118,29 @@ export interface ServerEventData {
 }
 
 /**
+ * Type of file for the video/audio to be turned into
+ */
+export type DownloadFileType = "MP4" | "MP3"
+
+/**
+ * Enum for which download directory the file should be downloaded to
+ */
+export type DownloadDirectory = "DOWNLOADS" | "CURRENT_USER"
+
+/**
+ * File name for the download
+ */
+export type DownloadFileName = `${string}.mp4` | `${string}.mp3`
+
+/**
  * Data thats sent to app from the server that contains info about a requested download
  */
 export interface YoutubeDownloadRequest extends ServerEventData {
     vid: string,
-    fileName: string,
-    dir: string,
+    fileName: DownloadFileName,
+    dir: DownloadDirectory,
     fullDir: string,
-    type: "MP4" | "MP3",
+    type: DownloadFileType,
     hasErrored?: boolean,
     error?: string,
     hasFinished?: boolean,
@@ -103,4 +171,7 @@ export interface LYTSetting {
     eventCallback: Function[],
 } 
 
+/**
+ * An event that can be recieved from the LYT server
+ */
 export type ServerEvent = [type: ServerEventType, data: ServerEventData]

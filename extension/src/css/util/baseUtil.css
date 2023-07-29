@@ -1,0 +1,8 @@
+div.ContentActive {
+    z-index: 1;
+    opacity: 1;
+}
+
+.springTimingFunction {
+    transition-timing-function: cubic-bezier(1,-0.13,.58,1.87);
+}

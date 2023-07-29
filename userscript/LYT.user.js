@@ -238,7 +238,6 @@
 
     // Key Event Listener
     addEventListener("keyup", (e) => {
-        console.log(e)
         if (e.key == "Escape" && IsInUI) {
             Close.click()
         } 
@@ -255,9 +254,9 @@
      *  if append is false it will remove all other injected css on the page
      *  if append is either true or null, it will append to the already injected css on the page
      * 
-     *  @param {string} CSS
-     *  @param {Boolean | null} Append? 
-     *  @returns Injected CSS Style Element
+     *  @param {string} `CSS` CSS to inject into the page
+     *  @param {Boolean | null} `Append` Optional Argument, defaults to `true`. 
+     *  @returns  `CustomCSS` Injected CSS Style Element
      */
     function injectCSS(css, append) {
         if (append == null) append = true
@@ -282,6 +281,11 @@
         return CustomCSS;
     }
 
+    /**
+     * Waits for an element to be loaded/added to the DOM using {@link document.querySelector}
+     * @param {string} `selector` Query selector to wait for
+     * @returns {Promise<Element>} A promise which resolves with the element in the selector when its found in the DOM
+     */
     function WaitForElement(selector) {
         return new Promise(resolve => {
             if (document.querySelector(selector)) {
@@ -350,7 +354,7 @@
                 DownloadMessage.style.opacity = "1"
                 DownloadMessage.innerText = "Downloading..."
 
-                var FilteredFileName = Type.value == "MP4" ? FileName.value + ".mp4" : FileName.value + ".mp3" 
+                var FilteredFileName = Type.value == "MP4" ? FileName.value + ".mp4" : FileName.value + ".mp3"
 
                 LYT.send(`DOWNLOAD_VIDEO|${CLIENT_ID}|${document.URL.split("?v=")[1].split("&")[0]}|${FilteredFileName}|${Dir.value}|${Type.value}`)
                 console.log(`[LYT] Downloading Video (${document.URL.split("?v=")[1].split("&")[0]})...`)

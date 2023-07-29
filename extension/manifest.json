@@ -1,0 +1,31 @@
+{
+    "manifest_version": 3,
+    "name": "LilYTDownloader Extension",
+    "description": "No Hassle Youtube Downloader",
+    "version": "0.1.1",
+    "action": {
+        "default_popup": "./dist/popup.html",
+        "default_icon": "./imgs/icon.png"
+    },
+    "icons": {
+        "16": "./imgs/icon16.png",
+        "32": "./imgs/icon32.png",
+        "48": "./imgs/icon48.png",
+        "128": "./imgs/icon128.png"
+    },
+    "background": {
+        "service_worker": "./dist/service-worker.js",
+        "type": "module"
+    },
+    "content_scripts": [
+        {
+            "js": ["./dist/youtubeScript.js"],
+            "matches": [
+                "*:\/\/*.youtube.com/watch?v=*"
+            ]
+        }
+    ],
+    "permissions": [
+        "tabs"
+    ]
+}

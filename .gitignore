@@ -1,5 +1,4 @@
-node_modules
-downloads
-temp
-misc
+node_modules/
+temp/
+misc/
 out/

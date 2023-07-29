@@ -430,6 +430,8 @@ window.IPC.subscribeToEvent("DOWNLOAD_UPDATE", (data: YoutubeDownloadUpdate) => 
 
         CLog_("DOWNLOAD_FINISHED", data.data)
 
+        Downloads[data.downloadID].downloadSize = Math.round(data.data.size)
+
         DownloadSize.innerText = `${Math.round(data.data.size)}mbs` 
     }
 

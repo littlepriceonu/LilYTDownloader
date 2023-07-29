@@ -21,11 +21,6 @@ h1.ACCESS_GRANTED {
     font-weight: 750;
 }
 
-.videoDisplay {
-    /* animation: gradientDirection 60s infinite;
-    background-image: linear-gradient(var(--gradient-angle), var(--gradient-from), var(--gradient-to)); */
-}
-
 #Littlepriceonu {
     &:focus-visible {
         outline:none;

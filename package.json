@@ -24,6 +24,7 @@
   "homepage": "https://github.com/littlepriceonu/LilYTDownloader#readme",
   "dependencies": {
     "@vibrant/types": "^3.2.1-alpha.1",
+    "chrome-types": "^0.1.219",
     "electron-squirrel-startup": "^1.0.0",
     "ffmpeg-static": "^5.1.0",
     "ffprobe-static": "^3.1.0",

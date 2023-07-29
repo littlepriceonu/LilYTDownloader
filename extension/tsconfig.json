@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "noImplicitAny": false,
+        "noEmitOnError": true,
+        "removeComments": true,
+        "sourceMap": true,
+        "target": "ESNext",
+        "outDir": "dist/",
+        "moduleResolution":"node",
+        "typeRoots": [
+            "../node_modules/@types",
+        ],
+    },
+    "files": [
+        "../node_modules/chrome-types/index.d.ts",
+        "../src/window/LYT.d.ts"
+    ],
+    "include": [
+        "src/**/*"
+    ]
+}
