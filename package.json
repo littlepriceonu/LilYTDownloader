@@ -8,6 +8,8 @@
   "icon": "/imgs/app.ico",
   "scripts": {
     "build": "build",
+    "build:app": "build_app",
+    "build:extension": "build_extension",
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make"

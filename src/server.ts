@@ -28,6 +28,7 @@ ffmpeg.setFfprobePath(ffprobePath)
 // TODO
 // ! Important Todos
 // Implement info about what type the download is (probably using the icons from the sidebar)
+// Add a little gray text that has the ID of the download, for debugging and telling similar downloads apart 
 //
 // ---------------
 // Install entire playlists to a folder
