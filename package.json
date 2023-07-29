@@ -1,7 +1,7 @@
 {
   "name": "LilYTDownloader",
   "displayName": "LYT",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Youtube Downloader",
   "main": "./dist/server.js",
   "type": "commonjs",
