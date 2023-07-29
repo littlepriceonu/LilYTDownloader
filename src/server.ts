@@ -63,6 +63,8 @@ if (LYTDir.includes("app.asar")) {
     }
 }
 
+require('update-electron-app')()
+
 if (require("electron-squirrel-startup")) {process.exit(1)}
 
 var forceClose = false

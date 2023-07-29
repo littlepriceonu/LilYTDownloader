@@ -25,6 +25,7 @@ if (LYTDir.includes("app.asar")) {
         LYTDir = removeLastDirFromString(LYTDir, "/");
     }
 }
+require('update-electron-app')();
 if (require("electron-squirrel-startup")) {
     process.exit(1);
 }

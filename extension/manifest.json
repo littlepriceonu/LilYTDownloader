@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "LilYTDownloader Extension",
     "description": "No Hassle Youtube Downloader",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "action": {
         "default_popup": "./dist/popup.html",
         "default_icon": "./imgs/icon.png"
