@@ -20,9 +20,9 @@ LilYTDownloader (or LYT for short) is a Windows app that lets you download youtu
 
 * If LYT doesn't open after the installation, open your Windows start menu and search for "LilYTDownloader".
 
-* Install the `extenstion.crx` from the releases page and run (double click) it, this will prompt you on which browser you'd like to open it in.
+* Go to your browsers extension settings and enable Developer Mode (if you're unsure how to do this, search "enable extension developer mode on [YOUR BROWSER HERE]")
 
-* Select your browser of choice.
+* Install the `extenstion.zip` from the releases page and unzip it, go to your browser's extension settings and hit "Load Unpacked" and select the unzipped folder.
 
 * Pin the extension (or don't 😔) and click on the extension.
 
