@@ -1,4 +1,6 @@
-import { DownloadedParts, LYTDownloadID, LYTSetting, YoutubeDownloadRequest as YoutubeDownloadData, YoutubeDownloadUpdate } from "./LYT"
+import { stringify } from "querystring"
+import { DownloadDirectory, DownloadFileName, DownloadFileType, DownloadedParts, LYTDownloadID, LYTSetting, YoutubeDownloadRequest as YoutubeDownloadData, YoutubeDownloadUpdate } from "./LYT"
+import { ipcRenderer } from "electron"
 
 const _Region = "RENDERER"
 
@@ -44,6 +46,23 @@ const DownloadVID = <HTMLDivElement>document.getElementById("DownloadVID")
 const VideoTitle = <HTMLHeadingElement>document.getElementById("VideoTitle")
 const VideoAuthor = <HTMLHeadingElement>document.getElementById("VideoAuthor")
 const ProgressText = <HTMLDivElement>document.getElementById("ProgressText")
+
+const DownloadButton = <HTMLInputElement>document.getElementById("DownloadButton")
+const DownloadCloseButton= <HTMLInputElement>document.getElementById("DownloadCloseButton")
+const TypeInput = <HTMLSelectElement>document.getElementById("TypeInput")
+const DirectoryInput = <HTMLSelectElement>document.getElementById("DirectoryInput")
+const FileNameInput = <HTMLInputElement>document.getElementById("FileNameInput")
+const DownloadInApp = <HTMLInputElement>document.getElementById("DownloadInApp")
+const VideoLinkInput = <HTMLInputElement>document.getElementById("VideoLinkInput")
+
+const DownloadNotValid = <HTMLDivElement>document.getElementById("DownloadNotValid")
+const DownloadVideoDisplay = <HTMLDivElement>document.getElementById("DownloadVideoDisplay")
+
+const DownloadThumbnail = <HTMLImageElement>document.getElementById("DownloadThumbnail")
+const DownloadTitle = <HTMLHeadingElement>document.getElementById("DownloadTitle")
+const DownloadAuthor = <HTMLHeadingElement>document.getElementById("DownloadAuthor")
+
+const InAppDownloadInterface = <HTMLDivElement>document.getElementById("InAppDownloadInterface")
 
 TabIndicator.style.top = `${(TabIndicator.parentElement.getBoundingClientRect().height-TabIndicator.getBoundingClientRect().height)/2}px`
 
@@ -454,6 +473,91 @@ window.IPC.subscribeToEvent("DOWNLOAD_UPDATE", (data: YoutubeDownloadUpdate) => 
 window.IPC.subscribeToEvent("DEBUG_MESSAGE", (message: string) => {
     CLog_("SERVER", message)
 })
+
+var CLIENT_ID: string = ""
+
+const SocketHandlers = {
+    "CLIENT_ID": function(id: string) {
+        CLIENT_ID = id
+    }
+}
+
+var LYTSocket = new WebSocket("ws://localhost:5020")
+
+LYTSocket.onmessage = (message) => {
+    const _Split = (message.data as string).split("|")
+    const ID = _Split.shift()
+    const Data = _Split
+
+    if (SocketHandlers[ID]) SocketHandlers[ID](Data)
+}
+
+DownloadInApp.onclick = () => {
+    InAppDownloadInterface.classList.add("FullyActive")
+}
+
+DownloadCloseButton.onclick = () => {
+    InAppDownloadInterface.classList.remove("FullyActive")
+}
+
+InAppDownloadInterface.onclick = (event) => {
+    if (event.composedPath()[0] == InAppDownloadInterface) {
+        InAppDownloadInterface.classList.remove("FullyActive")
+    }
+}
+
+var currentVIDValid: boolean = false
+var currentVID: string = ""
+
+VideoLinkInput.addEventListener("input", (event) => {
+    const idRegex = /^[a-zA-Z0-9-_]{11}$/;
+
+    const splitVID = VideoLinkInput.value.split("?v=")[1]?.split("&")[0]
+    const splitVIDValid = idRegex.test(splitVID)
+    const mainVIDValid = idRegex.test(VideoLinkInput.value)
+    
+    const vid = splitVIDValid ? splitVID : VideoLinkInput.value
+
+    currentVID = vid
+
+    currentVIDValid = idRegex.test(vid)
+
+    if (currentVIDValid) {
+        CLog_("IN_APP_DOWNLOAD", "VID is valid! Retriving video info...")
+
+        DownloadNotValid.classList.remove("ContentActive")
+        DownloadVideoDisplay.classList.add("ContentActive")
+
+        DownloadTitle.innerText = "Loading..."
+        DownloadThumbnail.src = ""
+        DownloadAuthor.innerText = "Loading..."
+
+        window.IPC.invokeInfoRequest(vid).then((info) => {
+
+            CLog_("IN_APP_DOWNLOAD", "Video Info Recieved!", info)
+
+            DownloadTitle.innerText = info.videoDetails.title
+            DownloadThumbnail.src = ThumbNailString.replace("[ID]", vid)
+            DownloadAuthor.innerText = info.videoDetails.author.name
+        })
+    }
+    else {
+        DownloadNotValid.classList.add("ContentActive")
+        DownloadVideoDisplay.classList.remove("ContentActive")
+    }
+})
+
+DownloadButton.onclick = () => {
+    if (currentVIDValid) {
+        var directory: DownloadDirectory = ((DirectoryInput.value as unknown) as DownloadDirectory)
+        var fileName: DownloadFileName = ((TypeInput.value == "MP4" ? FileNameInput.value + ".mp4" : FileNameInput.value + ".mp3" as unknown) as DownloadFileName)
+        var type: DownloadFileType = ((TypeInput.value as unknown) as DownloadFileType)
+
+        var toSend: Extension.SocketDownloadRequest = `DOWNLOAD_VIDEO|${CLIENT_ID}|${currentVID}|${fileName}|${directory}|${type}`
+
+        LYTSocket.send(toSend)
+    }
+}
 
 //#endregion
 

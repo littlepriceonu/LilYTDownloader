@@ -32,6 +32,19 @@ const DownloadVID = document.getElementById("DownloadVID");
 const VideoTitle = document.getElementById("VideoTitle");
 const VideoAuthor = document.getElementById("VideoAuthor");
 const ProgressText = document.getElementById("ProgressText");
+const DownloadButton = document.getElementById("DownloadButton");
+const DownloadCloseButton = document.getElementById("DownloadCloseButton");
+const TypeInput = document.getElementById("TypeInput");
+const DirectoryInput = document.getElementById("DirectoryInput");
+const FileNameInput = document.getElementById("FileNameInput");
+const DownloadInApp = document.getElementById("DownloadInApp");
+const VideoLinkInput = document.getElementById("VideoLinkInput");
+const DownloadNotValid = document.getElementById("DownloadNotValid");
+const DownloadVideoDisplay = document.getElementById("DownloadVideoDisplay");
+const DownloadThumbnail = document.getElementById("DownloadThumbnail");
+const DownloadTitle = document.getElementById("DownloadTitle");
+const DownloadAuthor = document.getElementById("DownloadAuthor");
+const InAppDownloadInterface = document.getElementById("InAppDownloadInterface");
 TabIndicator.style.top = `${(TabIndicator.parentElement.getBoundingClientRect().height - TabIndicator.getBoundingClientRect().height) / 2}px`;
 var currentTab = HomeTab;
 const TabMap = {
@@ -280,5 +293,68 @@ window.IPC.subscribeToEvent("DOWNLOAD_UPDATE", (data) => {
 window.IPC.subscribeToEvent("DEBUG_MESSAGE", (message) => {
     CLog_("SERVER", message);
 });
+var CLIENT_ID = "";
+const SocketHandlers = {
+    "CLIENT_ID": function (id) {
+        CLIENT_ID = id;
+    }
+};
+var LYTSocket = new WebSocket("ws://localhost:5020");
+LYTSocket.onmessage = (message) => {
+    const _Split = message.data.split("|");
+    const ID = _Split.shift();
+    const Data = _Split;
+    if (SocketHandlers[ID])
+        SocketHandlers[ID](Data);
+};
+DownloadInApp.onclick = () => {
+    InAppDownloadInterface.classList.add("FullyActive");
+};
+DownloadCloseButton.onclick = () => {
+    InAppDownloadInterface.classList.remove("FullyActive");
+};
+InAppDownloadInterface.onclick = (event) => {
+    if (event.composedPath()[0] == InAppDownloadInterface) {
+        InAppDownloadInterface.classList.remove("FullyActive");
+    }
+};
+var currentVIDValid = false;
+var currentVID = "";
+VideoLinkInput.addEventListener("input", (event) => {
+    const idRegex = /^[a-zA-Z0-9-_]{11}$/;
+    const splitVID = VideoLinkInput.value.split("?v=")[1]?.split("&")[0];
+    const splitVIDValid = idRegex.test(splitVID);
+    const mainVIDValid = idRegex.test(VideoLinkInput.value);
+    const vid = splitVIDValid ? splitVID : VideoLinkInput.value;
+    currentVID = vid;
+    currentVIDValid = idRegex.test(vid);
+    if (currentVIDValid) {
+        CLog_("IN_APP_DOWNLOAD", "VID is valid! Retriving video info...");
+        DownloadNotValid.classList.remove("ContentActive");
+        DownloadVideoDisplay.classList.add("ContentActive");
+        DownloadTitle.innerText = "Loading...";
+        DownloadThumbnail.src = "";
+        DownloadAuthor.innerText = "Loading...";
+        window.IPC.invokeInfoRequest(vid).then((info) => {
+            CLog_("IN_APP_DOWNLOAD", "Video Info Recieved!", info);
+            DownloadTitle.innerText = info.videoDetails.title;
+            DownloadThumbnail.src = ThumbNailString.replace("[ID]", vid);
+            DownloadAuthor.innerText = info.videoDetails.author.name;
+        });
+    }
+    else {
+        DownloadNotValid.classList.add("ContentActive");
+        DownloadVideoDisplay.classList.remove("ContentActive");
+    }
+});
+DownloadButton.onclick = () => {
+    if (currentVIDValid) {
+        var directory = DirectoryInput.value;
+        var fileName = (TypeInput.value == "MP4" ? FileNameInput.value + ".mp4" : FileNameInput.value + ".mp3");
+        var type = TypeInput.value;
+        var toSend = `DOWNLOAD_VIDEO|${CLIENT_ID}|${currentVID}|${fileName}|${directory}|${type}`;
+        LYTSocket.send(toSend);
+    }
+};
 Log_("Loaded!");
 //# sourceMappingURL=renderer.js.map

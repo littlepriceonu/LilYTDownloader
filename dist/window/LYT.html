@@ -21,7 +21,7 @@
 </head>
 
 <body class="text-white bg-slate-900 overflow-hidden">
-    <header class="w-full h-[5%] bg-slate-900 drag absolute z-20 bg-transparent">
+    <header class="absolute left-[30%] w-[70%] h-[5%] bg-slate-900 drag z-20 bg-transparent">
     </header>
     
     <div class="flex flex-row w-full h-full">
@@ -29,6 +29,9 @@
 
             <div class="w-full h-[5%] bg-[rgba(255,255,255,0.05)] rounded-tr-lg flex justify-start items-center">
                 <h1 class="ml-2 font-semibold text-sm xl:text-base">Downloads</h1>
+                <div id="DownloadInApp" class="ml-auto mr-3 active:scale-125 active:drop-shadow-[0_0_15px_rgb(37_99_235)] hover:text-blue-600 transition-all duration-300">
+                    <i class="fa-solid fa-download cursor-pointer"></i>
+                </div>
             </div>
 
             <div id="Videos" class="w-full h-[95%] absolute -z-10 opacity-0 flex flex-col items-center justify-start space-y-2.5 overflow-y-scroll scrollbar scrollbar-w-1 scrollbar-track-transparent scrollbar-thumb-rounded-md scrollbar-thumb-blue-800">
@@ -161,6 +164,52 @@
 
                     <div id="TabIndicator" class="transition-all duration-500 absolute TabSelected w-10 h-10 rounded-md bg-blue-700"></div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="InAppDownloadInterface" class="-z-20 w-full bg-black bg-opacity-30 h-full absolute top-0 left-0 flex flex-col items-center justify-center">
+        <div class="w-[65%] h-[80%] bg-slate-900 rounded-md">
+
+            <div class="relative w-[450px] h-[56px] mx-auto my-4">
+                <div id="DownloadNotValid" class="w-full h-full absolute top-0 left-0 transition-opacity ContentActive opacity-0 flex flex-col items-center justify-center text-xl mt-2">
+                    <h1>😖</h1>
+                    <h1>Link isn't a valid Youtube link!</h1>
+                </div>
+        
+                <div id="DownloadVideoDisplay" class="flex flex-row items-center justify-start w-ful500bsolute top-0 left-0 opacity-0">
+                    <img id="DownloadThumbnail" class="aspect-video w-20 mt-2 mx-4" src="https://i.ytimg.com/vi/lHZwlzOUOZ4/maxresdefault.jpg" alt="Video's Thumbnail">
+                    <div class="flex flex-col items-center justify-start">
+                        <h1 id="DownloadTitle" class="text-sm h-6 pr-5 pt-2">
+                            Tailwind CSS is the worst...
+                        </h1>
+                        <h2 id="DownloadAuthor" class="text-xs text-gray-400 text-left w-full mt-6">Fireship</h2>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="flex flex-col items-center justify-center">
+                <input autocomplete="off" class="transition-all indent-1 bg-slate-700 outline-none w-60 mt-1 h-[25px] border border-transparent border-solid focus-visible:border-blue-600 focus-visible:drop-shadow-[0_0_15px_blue]" id="VideoLinkInput" type="text" placeholder="Link Here...">
+
+                <h1 class="w-40 pt-4 text-left z-10">File Type</h1>
+                <select name="Dir" class="transition-all bg-slate-700 outline-none w-40 mt-1 h-[25px] border border-transparent border-solid focus-visible:border-blue-600 focus-visible:drop-shadow-[0_0_15px_blue]" id="TypeInput">
+                    <option value="MP4">Video</option>
+                    <option value="MP3">Audio</option>
+                </select>
+        
+        
+                <h1 class="w-40 pt-4 text-left z-10">Directory</h1>
+                <select name="Dir" class="transition-all bg-slate-700 outline-none w-40 mt-1 h-[25px] border border-transparent border-solid focus-visible:border-blue-600 focus-visible:drop-shadow-[0_0_15px_blue]" id="DirectoryInput">
+                    <option value="DOWNLOADS">Downloads</option>
+                    <option value="CURRENT_USER">Current User</option>
+                </select>
+        
+        
+                
+                <input placeholder="File Name Here..." autocomplete="off" class="mt-8 transition-all indent-1 bg-slate-700 outline-none w-40 h-[25px] border border-transparent border-solid focus-visible:border-blue-600 focus-visible:drop-shadow-[0_0_15px_blue]" id="FileNameInput" type="text">
+        
+                <input class="mt-6 px-4 py-2 bg-blue-600 rounded-lg transition-all hover:drop-shadow-[0_0_15px_blue] active:scale-90" id="DownloadButton" type="button" value="Download">
+                <input class="mt-6 px-4 py-2 bg-red-600 rounded-lg transition-all hover:drop-shadow-[0_0_15px_red] active:scale-90" id="DownloadCloseButton" type="button" value="Close">
             </div>
         </div>
     </div>

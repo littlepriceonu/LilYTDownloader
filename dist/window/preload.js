@@ -9,11 +9,6 @@ function Log(...toLog) {
     console.log(`[${Region}]`, ...toLog);
 }
 var eventSubscriptions = {};
-const TitleBarEventMap = {
-    "MAXIMIZE": "maximize-clicked",
-    "MINIMIZE": "minimize-clicked",
-    "CLOSE": "close-clicked",
-};
 const ExposedIPC = {
     openURL: (url) => {
         electron_1.ipcRenderer.send("open-url", url);
@@ -31,7 +26,7 @@ const ExposedIPC = {
                 res(data);
             });
         });
-    },
+    }
 };
 electron_1.contextBridge.exposeInMainWorld("IPC", ExposedIPC);
 electron_1.ipcRenderer.on('event-message', (_, message) => {

@@ -79,7 +79,7 @@ function createWindow() {
         minHeight: 600,
         titleBarStyle: "hidden",
         titleBarOverlay: {
-            color: "#0f172a",
+            color: "rgba(0, 0, 0, 0)",
             symbolColor: "#ffffff"
         },
         webPreferences: {
@@ -120,7 +120,7 @@ const IPCInvokeHandlers = {
             VData = data;
         });
         return VData;
-    },
+    }
 };
 const SocketHandlers = {
     "DEBUG": function (userID, msg, ..._) {

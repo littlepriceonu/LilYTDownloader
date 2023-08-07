@@ -5,6 +5,11 @@ div.ContentActive {
     opacity: 1;
 }
 
+div.FullyActive {
+    z-index: 999;
+    opacity: 1;
+}
+
 .springTimingFunction {
     transition-timing-function: cubic-bezier(1,-0.13,.58,1.87);
 }

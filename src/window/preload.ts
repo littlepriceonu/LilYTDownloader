@@ -21,12 +21,6 @@ function Log(...toLog: any[]) {
 
 var eventSubscriptions: { [event: string]: Array<Function> } = {}
 
-const TitleBarEventMap = {
-    "MAXIMIZE": "maximize-clicked",
-    "MINIMIZE": "minimize-clicked",
-    "CLOSE": "close-clicked",
-}
-
 const ExposedIPC: IPC = {
     openURL: (url: string) => {
         ipcRenderer.send("open-url", url)
@@ -45,7 +39,7 @@ const ExposedIPC: IPC = {
                 res(data)
             })
         })
-    },
+    }
 }
 
 contextBridge.exposeInMainWorld("IPC", ExposedIPC)

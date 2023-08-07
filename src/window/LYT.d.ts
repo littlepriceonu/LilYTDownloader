@@ -41,10 +41,16 @@ declare global {
             vid: string,
         }
     
+        /**
+         * Request sent from `popup` to `current-tab` to recieve info about the current video
+         */
         export interface VideoInfoRequest extends CommunicationData {
     
         }
 
+        /**
+         * Response sent from `current-tab` to `popup` with info about the current video
+         */
         export interface VideoInfoResponse extends CommunicationData {
             title: string,
             vid: string,
@@ -71,9 +77,9 @@ export interface IPC {
     /**
      * 
      * @param event The event to subscribe to
-     * @param callback 
+     * @param callback Callback for when the event is recieved
      */
-    subscribeToEvent(event: ServerEventType, callback: Function): undefined,
+    subscribeToEvent(event: ServerEventType, callback: Function): undefined
 }
 
 /**

@@ -29,6 +29,7 @@ ffmpeg.setFfprobePath(ffprobePath)
 // ! Important Todos
 // Implement info about what type the download is (probably using the icons from the sidebar)
 // Add a little gray text that has the ID of the download, for debugging and telling similar downloads apart 
+// links like https://youtu.be/5Kf0iGoZEi0 support in app
 //
 // ---------------
 // Install entire playlists to a folder
@@ -141,7 +142,7 @@ function createWindow() {
 
         titleBarStyle: "hidden",
         titleBarOverlay: {
-            color: "#0f172a",
+            color: "rgba(0, 0, 0, 0)",
             symbolColor: "#ffffff"
         },
 
@@ -198,7 +199,7 @@ const IPCInvokeHandlers = {
         })
 
         return VData
-    },
+    }
 }
 
 const SocketHandlers = {
@@ -250,7 +251,7 @@ const SocketHandlers = {
             if (ErrorOccured) return
             if (type == "MP4") if (!AudioDownloaded || !VideoDownloaded) return
 
-            if (type == "MP4") {
+            if (type == "MP4") {    
                 // https://stackoverflow.com/questions/56734348/how-to-add-audio-to-video-with-node-fluent-ffmpeg
                 ffmpeg()
                     .addInput(`${LYTDir}/temp/${tempFileName}_V.mp4`)
