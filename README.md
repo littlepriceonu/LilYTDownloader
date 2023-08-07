@@ -39,7 +39,7 @@ LilYTDownloader (or LYT for short) is a Windows app that lets you download youtu
 ## 🎥 Contributing
 
 Contribuing is greatly appriciated!
-Feel free to fork this repo and make a pull request, [I've](https://littlepriceonu.com) written a documentation and types for most of the important functions and important data in LYT.
+Feel free to fork this repo and make a pull request, [I've](https://littlepriceonu.com) written documentation and types for most of the important functions and important data in LYT.
 
 ### 📺 Setting up the Developer Enviroment
 
